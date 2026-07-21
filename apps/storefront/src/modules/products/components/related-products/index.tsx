@@ -2,6 +2,7 @@ import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
+import RelatedProductsSlider from "./slider"
 
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
@@ -47,23 +48,23 @@ export default async function RelatedProducts({
   }
 
   return (
-    <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-base-regular text-gray-600 mb-6">
-          Related products
-        </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
-        </p>
+    <div className="product-page-constraint w-full">
+      <div className="flex flex-col mb-8">
+        <h2 className="text-2xl font-bold uppercase tracking-widest text-black">
+          Recently Viewed Products
+        </h2>
       </div>
 
-      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
+      <RelatedProductsSlider>
         {products.map((product) => (
-          <li key={product.id}>
+          <li 
+            key={product.id}
+            className="w-[85vw] small:w-[calc(33.333%-16px)] medium:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+          >
             <Product region={region} product={product} />
           </li>
         ))}
-      </ul>
+      </RelatedProductsSlider>
     </div>
   )
 }

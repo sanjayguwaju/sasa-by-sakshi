@@ -7,6 +7,8 @@ import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import NavSearch from "@modules/layout/components/nav-search"
+import NavAccount from "@modules/layout/components/nav-account"
 
 export default async function Nav() {
   const [regions, locales, currentLocale] = await Promise.all([
@@ -16,51 +18,196 @@ export default async function Nav() {
   ])
 
   return (
-    <div className="sticky top-0 inset-x-0 z-50 group">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-white border-ui-border-base">
-        <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
-          <div className="flex-1 basis-0 h-full flex items-center">
-            <div className="h-full">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
-            </div>
+    <div className="sticky top-0 inset-x-0 z-50">
+      {/* Announcement Bar – desktop only */}
+      <div className="bg-black text-white text-center py-2 text-[10px] tracking-[0.2em] uppercase font-medium hidden small:block">
+        Free shipping on orders over $100&nbsp;&nbsp;|&nbsp;&nbsp;New Collection Available Now
+      </div>
+
+      <header className="relative bg-white border-b border-gray-100 shadow-sm">
+        {/* ===== DESKTOP NAVBAR ===== */}
+        <nav className="hidden small:flex items-center justify-between w-full h-16 content-container">
+
+          {/* Left: Nav Links */}
+          <div className="flex items-center gap-x-7 h-full">
+            <NavLink href="/collections" label="Collections" />
+            <NavLink href="/store" label="Products" badge="NEW" badgeColor="#4CAF50" />
+            <NavLink href="/categories" label="New In" badge="HOT" badgeColor="#FF9800" />
+            <NavLink href="/store?sort=trending" label="Trend" />
+            <NavLink href="/store?sort=sale" label="Shop" badge="Sale" badgeColor="#E53935" labelColor="#E53935" />
           </div>
 
-          <div className="flex items-center h-full">
+          {/* Center: Brand Logo */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
+              className="text-[32px] font-black tracking-tighter text-black hover:opacity-75 transition-opacity duration-200 leading-none select-none"
               data-testid="nav-store-link"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
             >
-              Medusa Store
+              SASA
             </LocalizedClientLink>
           </div>
 
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-ui-fg-base"
-                href="/account"
-                data-testid="nav-account-link"
-              >
-                Account
-              </LocalizedClientLink>
-            </div>
-            <Suspense
-              fallback={
-                <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
-                  href="/cart"
-                  data-testid="nav-cart-link"
-                >
-                  Cart (0)
-                </LocalizedClientLink>
-              }
+          {/* Right: Icon Actions */}
+          <div className="flex items-center gap-x-5 h-full">
+            <NavSearch />
+
+            <NavAccount />
+
+            <LocalizedClientLink
+              href="/wishlist"
+              className="text-gray-700 hover:text-black transition-colors duration-200"
+              data-testid="nav-wishlist-link"
+              aria-label="Wishlist"
             >
+              <HeartIcon />
+            </LocalizedClientLink>
+
+            <Suspense fallback={<CartIconLink />}>
+              <CartButton />
+            </Suspense>
+          </div>
+        </nav>
+
+        {/* ===== MOBILE NAVBAR ===== */}
+        <nav className="flex small:hidden items-center justify-between w-full h-14 px-4 relative">
+          {/* Left: Hamburger + Search */}
+          <div className="flex items-center gap-x-3 z-10">
+            <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+            <NavSearch mobile />
+          </div>
+
+          {/* Center: Brand Logo */}
+          <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none">
+            <LocalizedClientLink
+              href="/"
+              className="text-[22px] font-black tracking-tighter text-black leading-none select-none pointer-events-auto"
+              data-testid="nav-store-link-mobile"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            >
+              SASA
+            </LocalizedClientLink>
+          </div>
+
+          {/* Right: Account + Cart */}
+          <div className="flex items-center gap-x-4 z-10">
+            <NavAccount />
+            <Suspense fallback={<CartIconLink />}>
               <CartButton />
             </Suspense>
           </div>
         </nav>
       </header>
     </div>
+  )
+}
+
+/* ── Sub-components ─────────────────────────────────────────── */
+
+function NavLink({
+  href,
+  label,
+  badge,
+  badgeColor,
+  labelColor,
+}: {
+  href: string
+  label: string
+  badge?: string
+  badgeColor?: string
+  labelColor?: string
+}) {
+  return (
+    <LocalizedClientLink
+      href={href}
+      className="relative group h-full flex items-center"
+    >
+      <span
+        className="text-[11px] tracking-[0.12em] uppercase font-medium transition-colors duration-200 hover:text-black"
+        style={{ color: labelColor ?? "#555" }}
+      >
+        {label}
+        {badge && (
+          <span
+            className="absolute -top-1 -right-5 text-white text-[7px] px-1 py-0.5 rounded-[2px] tracking-wider font-bold leading-none"
+            style={{ backgroundColor: badgeColor }}
+          >
+            {badge}
+          </span>
+        )}
+      </span>
+      <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-full" />
+    </LocalizedClientLink>
+  )
+}
+
+function CartIconLink() {
+  return (
+    <LocalizedClientLink
+      className="text-gray-700 hover:text-black transition-colors duration-200"
+      href="/cart"
+      data-testid="nav-cart-link"
+      aria-label="Cart"
+    >
+      <BagIcon />
+    </LocalizedClientLink>
+  )
+}
+
+function UserIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="w-[18px] h-[18px]"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+      />
+    </svg>
+  )
+}
+
+function HeartIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="w-[18px] h-[18px]"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+      />
+    </svg>
+  )
+}
+
+function BagIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="w-[18px] h-[18px]"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"
+      />
+    </svg>
   )
 }

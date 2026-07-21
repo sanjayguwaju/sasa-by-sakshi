@@ -11,6 +11,21 @@ type OptionSelectProps = {
   "data-testid"?: string
 }
 
+const colorMap: Record<string, string> = {
+  white: "#ffffff",
+  black: "#000000",
+  red: "#ff0000",
+  blue: "#0000ff",
+  purple: "#800080",
+  green: "#008000",
+  yellow: "#ffff00",
+  gray: "#808080",
+  grey: "#808080",
+  pink: "#ffc0cb",
+  brown: "#a52a2a",
+  orange: "#ffa500",
+}
+
 const OptionSelect: React.FC<OptionSelectProps> = ({
   option,
   current,
@@ -20,25 +35,56 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   disabled,
 }) => {
   const filteredOptions = (option.values ?? []).map((v) => v.value)
+  const isColor = title.toLowerCase() === "color" || title.toLowerCase() === "colour"
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Select {title}</span>
+      <div className="flex items-center gap-1">
+        <span className="text-sm font-medium">{title}:</span>
+        {current && <span className="text-sm text-gray-700">{current}</span>}
+      </div>
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="flex flex-wrap gap-2"
         data-testid={dataTestId}
       >
         {filteredOptions.map((v) => {
+          const isActive = v === current
+          
+          if (isColor) {
+            const hex = colorMap[v.toLowerCase()] || "#cccccc"
+            return (
+              <button
+                onClick={() => updateOption(option.id, v)}
+                key={v}
+                title={v}
+                className={clx(
+                  "w-8 h-8 flex items-center justify-center p-0.5 transition-colors",
+                  {
+                    "border border-black": isActive,
+                    "border border-transparent hover:border-gray-300": !isActive,
+                  }
+                )}
+                disabled={disabled}
+                data-testid="option-button"
+              >
+                <span 
+                  className="w-full h-full block border border-gray-200" 
+                  style={{ backgroundColor: hex }} 
+                />
+              </button>
+            )
+          }
+
+          // Default / Size buttons
           return (
             <button
               onClick={() => updateOption(option.id, v)}
               key={v}
               className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
+                "min-w-[40px] h-10 px-3 text-sm flex items-center justify-center transition-colors",
                 {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
+                  "border border-black text-black": isActive,
+                  "border border-gray-200 text-gray-700 hover:border-black hover:text-black": !isActive,
                 }
               )}
               disabled={disabled}

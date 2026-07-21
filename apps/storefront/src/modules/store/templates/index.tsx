@@ -4,6 +4,7 @@ import { OptionValueIds } from "@lib/util/product-option-filters"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import StoreToolbar from "@modules/store/components/store-toolbar"
 
 import PaginatedProducts from "./paginated-products"
 
@@ -22,15 +23,29 @@ const StoreTemplate = ({
   const sort = sortBy || "created_at"
 
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} />
-      <div className="w-full">
-        <div className="mb-8 text-2xl-semi">
-          <h1 data-testid="store-page-title">All products</h1>
+    <div className="flex flex-col md:flex-row py-10 content-container gap-x-8">
+      {/* 25% Left Sidebar */}
+      <div className="w-full md:w-[25%] flex-shrink-0">
+        <RefinementList sortBy={sort} />
+      </div>
+      
+      {/* 75% Right Main Content */}
+      <div className="w-full md:w-[75%]">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold uppercase tracking-tight text-black mb-4">
+            Classic - All
+          </h1>
+          <p className="text-sm text-gray-700 leading-relaxed max-w-4xl">
+            The Classic Collection celebrates timeless silhouettes and refined simplicity. Each piece is designed to blend effortlessly into modern life — from tailored essentials to soft everyday layers. Discover minimal fashion that never fades, where comfort meets enduring elegance.
+          </p>
         </div>
+
+        {/* View Controls Toolbar */}
+        <StoreToolbar sortBy={sort} />
+
+        {/* Product Grid */}
         <Suspense fallback={<SkeletonProductGrid />}>
           <PaginatedProducts
             sortBy={sort}
