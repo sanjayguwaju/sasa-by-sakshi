@@ -7,8 +7,6 @@ services:
       context: .
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env.docker
     ports:
       - "9000:9000"
     volumes:
@@ -26,8 +24,6 @@ services:
       context: .
       dockerfile: apps/storefront/Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env.docker
     ports:
       - "8000:8000"
     depends_on:
