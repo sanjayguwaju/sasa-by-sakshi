@@ -87,10 +87,8 @@ module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
-    // Limit pool size per-connection so 25+ parallel module migrations
-    // don't exhaust PostgreSQL's max_connections during startup.
     databaseDriverOptions: {
-      pool: { min: 1, max: 5 },
+      connection: { ssl: false },
     },
     http: {
       storeCors: process.env.STORE_CORS!,

@@ -7,6 +7,34 @@ SHARED_KEY_FILE="/shared/publishable_key.env"
 
 cd /app/apps/backend
 
+# ─── Check Database Connection ────────────────────────────────────────────────
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ⏳  Checking PostgreSQL connection..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+node -e "
+const { Client } = require('pg');
+const connectionString = process.env.DATABASE_URL;
+async function testConnection() {
+  for (let i = 1; i <= 30; i++) {
+    const client = new Client({ connectionString, ssl: false });
+    try {
+      await client.connect();
+      console.log('  ✅  PostgreSQL connection verified successfully!');
+      await client.end();
+      process.exit(0);
+    } catch (err) {
+      console.log('  ⏳  [Attempt ' + i + '/30] Waiting for PostgreSQL (' + err.message + ')...');
+      try { await client.end(); } catch (e) {}
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+  console.error('  ❌  Failed to connect to PostgreSQL after 30 attempts.');
+  process.exit(1);
+}
+testConnection();
+"
+
 # ─── Migrations ──────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
