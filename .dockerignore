@@ -7,6 +7,12 @@ node_modules
 .env.local
 .env.docker
 README.md
+
+# Storefront build artifacts
 apps/storefront/.next
 apps/storefront/node_modules
+apps/storefront/tsconfig.tsbuildinfo
+
+# Backend build artifacts
 apps/backend/node_modules
+apps/backend/.medusa

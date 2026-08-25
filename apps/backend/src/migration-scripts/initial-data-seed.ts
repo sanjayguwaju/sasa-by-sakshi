@@ -105,10 +105,17 @@ export default async function initial_data_seed({
           countries,
           payment_providers: ["pp_system_default"],
         },
+        {
+          name: "Nepal",
+          currency_code: "npr",
+          countries: ["np"],
+          payment_providers: ["pp_system_default"],
+        }
       ],
     },
   });
   const region = regionResult[0];
+  const nepalRegion = regionResult.find(r => r.name === "Nepal") || regionResult[1];
   logger.info("Finished seeding regions.");
 
   logger.info("Seeding tax regions...");
@@ -283,6 +290,36 @@ export default async function initial_data_seed({
           },
         ],
       },
+      {
+        name: "Inside Ring Road (Kathmandu)",
+        price_type: "flat",
+        provider_id: "manual_manual",
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        type: { label: "Standard", description: "Inside Ring Road", code: "inside-ring" },
+        prices: [{ region_id: nepalRegion.id, amount: 100 }],
+        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+      },
+      {
+        name: "Outside Ring Road / Kathmandu Valley",
+        price_type: "flat",
+        provider_id: "manual_manual",
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        type: { label: "Standard", description: "Outside Ring Road", code: "outside-ring" },
+        prices: [{ region_id: nepalRegion.id, amount: 150 }],
+        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+      },
+      {
+        name: "Outside Valley",
+        price_type: "flat",
+        provider_id: "manual_manual",
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        type: { label: "Standard", description: "Outside Valley", code: "outside-valley" },
+        prices: [{ region_id: nepalRegion.id, amount: 250 }],
+        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+      }
     ],
   });
   logger.info("Finished seeding fulfillment data.");
@@ -318,6 +355,10 @@ export default async function initial_data_seed({
           name: "Merch",
           is_active: true,
         },
+        {
+          name: "Kurthas",
+          is_active: true,
+        },
       ],
     },
   });
@@ -335,11 +376,21 @@ export default async function initial_data_seed({
           title: "Color",
           values: ["Black", "White"],
         },
+        {
+          title: "Type",
+          values: ["Unstitched", "Stitched"],
+        },
+        {
+          title: "Material",
+          values: ["Cotton", "Georgette"],
+        },
       ],
     },
   });
   const sizeOption = productOptionsResult.find((o) => o.title === "Size")!;
   const colorOption = productOptionsResult.find((o) => o.title === "Color")!;
+  const typeOption = productOptionsResult.find((o) => o.title === "Type")!;
+  const materialOption = productOptionsResult.find((o) => o.title === "Material")!;
 
   await createProductsWorkflow(container).run({
     input: {
@@ -806,6 +857,53 @@ export default async function initial_data_seed({
                 },
               ],
             },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Sasa Exclusive Kurtha",
+          category_ids: [
+            categoryResult.find((cat) => cat.name === "Kurthas")!.id,
+          ],
+          description: "Beautifully hand-stitched traditional Kurtha.",
+          handle: "sasa-exclusive-kurtha",
+          weight: 500,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          options: [
+            { id: sizeOption.id },
+            { id: typeOption.id },
+            { id: materialOption.id },
+          ],
+          variants: [
+            {
+              title: "M / Stitched / Cotton",
+              sku: "KURTHA-M-ST-CO",
+              options: {
+                Size: "M",
+                Type: "Stitched",
+                Material: "Cotton"
+              },
+              prices: [
+                { amount: 2500, currency_code: "npr" }
+              ]
+            },
+            {
+              title: "L / Unstitched / Georgette",
+              sku: "KURTHA-L-UN-GE",
+              options: {
+                Size: "L",
+                Type: "Unstitched",
+                Material: "Georgette"
+              },
+              prices: [
+                { amount: 3000, currency_code: "npr" }
+              ]
+            }
           ],
           sales_channels: [
             {

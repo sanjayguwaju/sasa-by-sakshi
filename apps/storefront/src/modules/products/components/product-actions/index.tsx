@@ -105,6 +105,17 @@ export default function ProductActions({
   // We use calculated_price if available. For true subtotal, we need the numeric price.
   // We'll let the user see the visual update from standard ProductPrice and mock subtotal with plain text.
 
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER
+  const whatsappInquiryUrl = useMemo(() => {
+    if (!whatsappNumber) return null
+    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, "")
+    const variantText = selectedVariant?.title ? ` (Variant: ${selectedVariant.title})` : ""
+    const message = encodeURIComponent(
+      `Namaste Sasa by Sakshi! 🙏 I'm interested in ordering/inquiring about: "${product.title}"${variantText}.\nProduct Link: ${typeof window !== "undefined" ? window.location.href : ""}`
+    )
+    return `https://wa.me/${cleanNumber}?text=${message}`
+  }, [whatsappNumber, product.title, selectedVariant])
+
   return (
     <>
       <div className="flex flex-col gap-y-6" ref={actionsRef}>
@@ -113,7 +124,7 @@ export default function ProductActions({
         <div className="flex flex-col gap-y-2">
           <h1 className="text-2xl font-bold text-black">{product.title}</h1>
           <div className="text-sm text-gray-700">
-            <p>Vendor: <span className="font-medium">Hugo Streetwear</span></p>
+            <p>Vendor: <span className="font-medium">Sasa by Sakshi</span></p>
             <p className="mt-1">Availability: <span className="font-medium">{inStock ? "In stock" : "Out of stock"}</span></p>
           </div>
         </div>
@@ -137,56 +148,6 @@ export default function ProductActions({
           ))}
         </div>
 
-        {/* Scarcity Bar Mock */}
-        <div className="flex flex-col gap-y-1">
-          <span className="text-red-500 text-sm font-medium">Hurry up! Only 2 left</span>
-          <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-red-500 w-[15%] h-full rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Countdown Timer Mock */}
-        <div className="bg-gray-100 rounded-full px-8 py-3 flex items-center justify-center gap-x-4 max-w-sm">
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-light">163</span>
-            <span className="text-[10px] uppercase tracking-wide">Days</span>
-          </div>
-          <span className="text-2xl font-light mb-4">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-light">10</span>
-            <span className="text-[10px] uppercase tracking-wide">Hours</span>
-          </div>
-          <span className="text-2xl font-light mb-4">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-light">36</span>
-            <span className="text-[10px] uppercase tracking-wide">Mins</span>
-          </div>
-          <span className="text-2xl font-light mb-4">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-light">41</span>
-            <span className="text-[10px] uppercase tracking-wide">Secs</span>
-          </div>
-        </div>
-
-        {/* Custom Inputs Mock */}
-        <div className="flex flex-col gap-y-4">
-          <div className="flex flex-col gap-y-1">
-            <label className="text-sm font-medium">Input text</label>
-            <input type="text" className="border border-gray-300 h-10 px-3 w-full max-w-sm focus:outline-none focus:border-black" />
-          </div>
-          <div className="flex flex-col gap-y-1">
-            <label className="text-sm font-medium">Input file</label>
-            <input type="file" className="border border-gray-300 h-10 w-full max-w-sm p-1 text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-black hover:file:bg-gray-200" />
-          </div>
-        </div>
-
-        {/* Utilities Links */}
-        <div className="flex items-center gap-x-6 text-sm text-black font-medium">
-          <button className="flex items-center gap-x-2 hover:opacity-70"><span className="text-lg">📏</span> Size chart</button>
-          <button className="flex items-center gap-x-2 hover:opacity-70"><span className="text-lg">🎨</span> Compare color</button>
-          <button className="flex items-center gap-x-2 hover:opacity-70"><span className="text-lg">🙋</span> Ask an expert</button>
-        </div>
-
         {/* Quantity & Subtotal */}
         <div className="flex flex-col gap-y-4">
           <div className="flex flex-col gap-y-2">
@@ -203,43 +164,36 @@ export default function ProductActions({
         </div>
 
         {/* Add to Cart row */}
-        <div className="flex items-center gap-x-4">
+        <div className="flex flex-col gap-y-3">
           <button
             onClick={handleAddToCart}
-            disabled={!inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant || !agreed}
-            className={`flex-1 h-12 bg-black text-white font-bold tracking-widest text-xs uppercase hover:bg-gray-800 transition-colors ${(!inStock || !isValidVariant || !agreed) ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={!inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant}
+            className={`w-full h-12 bg-black text-white font-bold tracking-widest text-xs uppercase hover:bg-gray-800 transition-colors ${(!inStock || !isValidVariant) ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="add-product-button"
           >
             {!selectedVariant && !options ? "Select variant" : !inStock || !isValidVariant ? "Out of stock" : "Add to cart"}
           </button>
-          
-          <button className="w-12 h-12 border border-gray-300 flex items-center justify-center hover:border-black transition-colors">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-          </button>
-          <button className="w-12 h-12 border border-gray-300 flex items-center justify-center hover:border-black transition-colors">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-          </button>
+
+          {/* WhatsApp Direct Order / Inquiry Button */}
+          {whatsappInquiryUrl && (
+            <a
+              href={whatsappInquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 flex items-center justify-center gap-x-2 border border-[#25D366] bg-emerald-50/60 text-[#128C7E] hover:bg-[#25D366] hover:text-white font-bold tracking-widest text-xs uppercase transition-all duration-200 rounded-none shadow-sm"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.78 11.66c-.2-.1-.7-1.19-.77-1.3-.07-.11-.12-.17-.18-.08-.06.09-.23.29-.28.35-.05.06-.11.07-.31-.03-.2-.1-.85-.31-1.61-.99-.6-.53-1-1.19-1.12-1.39-.11-.2-.01-.31.09-.41.09-.09.2-.23.3-.35.1-.11.13-.19.2-.31.07-.12.03-.23-.02-.33-.05-.1-.45-1.08-.62-1.48-.16-.39-.33-.34-.45-.34h-.39c-.13 0-.35.05-.53.25-.18.2-.7.68-.7 1.67 0 .98.72 1.93.82 2.06.1.13 1.41 2.15 3.42 3.01.48.21.85.33 1.14.42.48.15.92.13 1.27.08.39-.06 1.19-.49 1.36-.96.17-.47.17-.88.12-.96-.05-.08-.18-.13-.38-.23z" />
+              </svg>
+              <span>Inquire / Order on WhatsApp</span>
+            </a>
+          )}
         </div>
 
-        {/* Terms Checkbox */}
-        <label className="flex items-center gap-x-2 cursor-pointer text-sm">
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="w-4 h-4 border-gray-300 cursor-pointer" />
-          <span>I agree with the <Link href="#" className="underline">Terms & Conditions</Link></span>
-        </label>
-
-        {/* Buy It Now */}
-        <button 
-          disabled={!agreed}
-          className={`w-full h-12 border border-gray-300 bg-white text-black font-bold tracking-widest text-xs uppercase hover:border-black transition-colors ${!agreed ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          Buy It Now
-        </button>
-
-        {/* Pickup Info */}
-        <div className="flex flex-col gap-y-1 text-xs mt-2">
-          <p className="flex items-center gap-x-1 font-medium"><span className="text-green-600">✓</span> Pickup available at 2630 Airport Road</p>
-          <p className="text-gray-500 pl-4">Usually ready in 24 hours</p>
-          <button className="text-gray-500 underline pl-4 text-left hover:text-black">View store information</button>
+        {/* Delivery & Assurance Info */}
+        <div className="flex flex-col gap-y-1 text-xs mt-2 border-t border-gray-100 pt-4">
+          <p className="flex items-center gap-x-1 font-medium text-gray-800"><span className="text-green-600">✓</span> Cash on Delivery Available across Nepal</p>
+          <p className="text-gray-500 pl-4">Delivery in 24-48 hours inside Kathmandu Valley</p>
         </div>
 
         <MobileActions

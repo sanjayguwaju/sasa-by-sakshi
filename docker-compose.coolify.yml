@@ -1,0 +1,42 @@
+name: sasa-by-sakshi
+
+services:
+  # ─── Medusa Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "9000:9000"
+    volumes:
+      - shared_data:/shared
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  # ─── Next.js Storefront ────────────────────────────────────────────────────
+  storefront:
+    build:
+      context: .
+      dockerfile: apps/storefront/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "8000:8000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - shared_data:/shared
+    environment:
+      MEDUSA_SERVER_URL: http://backend:9000
+
+volumes:
+  shared_data:

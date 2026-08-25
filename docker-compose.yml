@@ -1,0 +1,80 @@
+name: sasa-by-sakshi
+
+services:
+  # ─── Infrastructure ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    # Medusa v2 runs 25+ module migrations in parallel — raise max_connections
+    command: postgres -c max_connections=500 -c shared_buffers=256MB
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-sasa_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sasa_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Medusa Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - shared_data:/shared
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  # ─── Next.js Storefront ────────────────────────────────────────────────────
+  storefront:
+    build:
+      context: .
+      dockerfile: apps/storefront/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "8001:8000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - shared_data:/shared
+    environment:
+      MEDUSA_SERVER_URL: http://backend:9000
+
+volumes:
+  postgres_data:
+  shared_data:

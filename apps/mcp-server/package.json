@@ -1,0 +1,27 @@
+{
+  "name": "@dtc/mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) Server for Sasa by Sakshi (Medusa v2)",
+  "main": "dist/index.js",
+  "bin": {
+    "sasa-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

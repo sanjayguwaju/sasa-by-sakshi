@@ -20,6 +20,11 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
+        brand: {
+          primary: "#cda434", // Elegant gold
+          secondary: "#1a1a1a", // Deep charcoal/almost black
+          bg: "#fdfcfb", // Warm premium white
+        },
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -67,6 +72,14 @@ module.exports = {
           "Helvetica Neue",
           "Ubuntu",
           "sans-serif",
+        ],
+        serif: [
+          "Playfair Display",
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "Times",
+          "serif",
         ],
       },
       keyframes: {

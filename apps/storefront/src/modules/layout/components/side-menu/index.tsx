@@ -15,13 +15,19 @@ type SideMenuProps = {
   currentLocale: string | null
 }
 
+type MenuItem = {
+  name: string
+  href: string
+  thumbnail: string | null
+  hasArrow?: boolean
+}
+
 // Menu items with optional thumbnail and arrow indicator
-const menuItems = [
+const menuItems: MenuItem[] = [
   { name: "Home", href: "/", thumbnail: null },
-  { name: "New In", href: "/categories", thumbnail: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=60&h=60&fit=crop&crop=face", hasArrow: true },
-  { name: "Collections", href: "/collections", thumbnail: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=60&h=60&fit=crop&crop=center", hasArrow: true },
-  { name: "Shop This Look", href: "/store?look=true", thumbnail: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=60&h=60&fit=crop&crop=face", hasArrow: true },
-  { name: "Blog", href: "/blog", thumbnail: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=60&h=60&fit=crop&crop=center", hasArrow: true },
+  { name: "Shop Kurthas", href: "/store", thumbnail: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=60&h=60&fit=crop&crop=center" },
+  { name: "New In", href: "/categories", thumbnail: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=60&h=60&fit=crop&crop=face" },
+  { name: "Journal & Styling Guide", href: "/blog", thumbnail: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=60&h=60&fit=crop&crop=center" },
   { name: "My Wish List", href: "/wishlist", thumbnail: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=60&h=60&fit=crop&crop=face" },
   { name: "My Account", href: "/account", thumbnail: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=60&h=60&fit=crop&crop=face" },
 ]

@@ -21,7 +21,7 @@ export default async function Nav() {
     <div className="sticky top-0 inset-x-0 z-50">
       {/* Announcement Bar – desktop only */}
       <div className="bg-black text-white text-center py-2 text-[10px] tracking-[0.2em] uppercase font-medium hidden small:block">
-        Free shipping on orders over $100&nbsp;&nbsp;|&nbsp;&nbsp;New Collection Available Now
+        Cash on Delivery Available Across Nepal&nbsp;&nbsp;|&nbsp;&nbsp;Exclusive Festive Kurtha Collection
       </div>
 
       <header className="relative bg-white border-b border-gray-100 shadow-sm">
@@ -30,11 +30,10 @@ export default async function Nav() {
 
           {/* Left: Nav Links */}
           <div className="flex items-center gap-x-7 h-full">
-            <NavLink href="/collections" label="Collections" />
-            <NavLink href="/store" label="Products" badge="NEW" badgeColor="#4CAF50" />
-            <NavLink href="/categories" label="New In" badge="HOT" badgeColor="#FF9800" />
-            <NavLink href="/store?sort=trending" label="Trend" />
-            <NavLink href="/store?sort=sale" label="Shop" badge="Sale" badgeColor="#E53935" labelColor="#E53935" />
+            <NavLink href="/store" label="All Kurthas" />
+            <NavLink href="/collections" label="Collections" badge="HOT" badgeColor="#cda434" />
+            <NavLink href="/categories" label="New In" />
+            <NavLink href="/blog" label="Journal" badge="BLOG" badgeColor="#1a1a1a" />
           </div>
 
           {/* Center: Brand Logo */}
