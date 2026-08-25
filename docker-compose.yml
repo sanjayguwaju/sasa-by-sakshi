@@ -72,9 +72,8 @@ services:
         condition: service_healthy
     volumes:
       - shared_data:/shared
-    environment:
-      MEDUSA_SERVER_URL: http://backend:9000
 
 volumes:
+
   postgres_data:
   shared_data:
