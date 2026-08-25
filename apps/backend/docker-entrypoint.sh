@@ -61,12 +61,12 @@ pnpm medusa user -e "${ADMIN_EMAIL}" -p "${ADMIN_PASSWORD}" 2>&1 \
   && echo "  ✅  Admin user ready." \
   || echo "  ℹ️   Admin user may already exist — continuing."
 
-# ─── Start backend ───────────────────────────────────────────────────────────
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  🚀  Starting Medusa backend on :9000 ..."
-echo "  (production mode — serving pre-built admin assets)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# Ensure admin static build assets are present in both root and .medusa/server
+mkdir -p /app/apps/backend/public
+cp -r /app/apps/backend/.medusa/server/public/* /app/apps/backend/public/ 2>/dev/null || true
+mkdir -p /app/apps/backend/.medusa/server/public
+cp -r /app/apps/backend/public/* /app/apps/backend/.medusa/server/public/ 2>/dev/null || true
+
 pnpm medusa start &
 MEDUSA_PID=$!
 

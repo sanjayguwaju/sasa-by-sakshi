@@ -15,9 +15,8 @@ RUN pnpm install --frozen-lockfile --filter=@dtc/backend...
 FROM deps AS builder
 WORKDIR /app
 
-COPY apps/backend ./apps/backend
-
 RUN cd apps/backend && pnpm build
+RUN mkdir -p /app/apps/backend/public && cp -r /app/apps/backend/.medusa/server/public/* /app/apps/backend/public/ 2>/dev/null || true
 
 # ─── Runtime ───────────────────────────────────────────────────────────────
 FROM base AS runner
