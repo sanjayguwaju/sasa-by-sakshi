@@ -30,10 +30,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "  🚀  Starting Medusa backend on :9000 ..."
 echo "  (production mode — serving pre-built admin assets)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-# Symlink node_modules into .medusa/server so medusa start resolves correctly
-ln -sfn /app/node_modules /app/apps/backend/.medusa/server/node_modules 2>/dev/null || true
-# Run medusa start from .medusa/server so it finds the pre-built admin at ./public/admin
-(cd /app/apps/backend/.medusa/server && /app/node_modules/.pnpm/node_modules/.bin/medusa start) &
+pnpm medusa start &
 MEDUSA_PID=$!
 
 # ─── Wait for backend health ──────────────────────────────────────────────────
