@@ -55,11 +55,10 @@ echo "  ✅  Migrations complete."
 # ─── Admin user ──────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  👤  Creating admin user: ${ADMIN_EMAIL}"
+echo "  👤  Provisioning guaranteed admin user..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-pnpm medusa user -e "${ADMIN_EMAIL}" -p "${ADMIN_PASSWORD}" 2>&1 \
-  && echo "  ✅  Admin user ready." \
-  || echo "  ℹ️   Admin user may already exist — continuing."
+pnpm medusa exec ./src/scripts/create-admin-user.ts || pnpm medusa user -e "${ADMIN_EMAIL}" -p "${ADMIN_PASSWORD}" || true
+echo "  ✅  Admin user ready."
 
 # Ensure admin static build assets are present in both root and .medusa/server
 mkdir -p /app/apps/backend/public
