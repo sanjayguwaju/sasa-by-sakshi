@@ -5,15 +5,19 @@ RUN corepack enable && corepack prepare pnpm@10.11.1 --activate
 # ─── Install dependencies ───────────────────────────────────────────────────
 FROM base AS deps
 WORKDIR /app
+ENV NODE_ENV=development
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY apps/backend/package.json ./apps/backend/
 
-RUN pnpm install --frozen-lockfile --filter=@dtc/backend...
+RUN pnpm install --prod=false --frozen-lockfile --filter=@dtc/backend...
 
 # ─── Build ─────────────────────────────────────────────────────────────────
 FROM deps AS builder
 WORKDIR /app
+ENV NODE_ENV=development
+
+COPY apps/backend ./apps/backend
 
 RUN cd apps/backend && pnpm build
 RUN mkdir -p /app/apps/backend/public && cp -r /app/apps/backend/.medusa/server/public/* /app/apps/backend/public/ 2>/dev/null || true
@@ -21,6 +25,7 @@ RUN mkdir -p /app/apps/backend/public && cp -r /app/apps/backend/.medusa/server/
 # ─── Runtime ───────────────────────────────────────────────────────────────
 FROM base AS runner
 WORKDIR /app
+ENV NODE_ENV=production
 
 # Bring in installed node_modules (root + app level)
 COPY --from=deps /app/node_modules ./node_modules
