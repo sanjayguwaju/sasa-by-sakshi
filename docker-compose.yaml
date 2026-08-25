@@ -39,3 +39,9 @@ services:
 volumes:
   shared_data:
 
+networks:
+  default:
+    name: coolify
+    external: true
+
+
