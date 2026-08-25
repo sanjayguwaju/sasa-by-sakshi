@@ -27,7 +27,7 @@ export default async function createAdminUser({ container }: ExecArgs) {
       console.log(`  ✅ Created user profile: ${user.id}`)
     }
 
-    // Reset auth identity for clean login
+    // Clean up old auth identity so authModule.register creates a fresh scrypt KDF hash
     try {
       const identities = await authModule.listAuthIdentities({
         provider_identities: {
@@ -44,23 +44,28 @@ export default async function createAdminUser({ container }: ExecArgs) {
       // Ignore if not found
     }
 
-    // Register fresh emailpass credentials
-    await authModule.createAuthIdentities({
-      provider_identities: [
-        {
-          provider: "emailpass",
-          entity_id: email,
-          provider_metadata: {
-            password,
-          },
-        },
-      ],
-      app_metadata: {
-        user_id: user.id,
+    // Use official authModule.register to perform proper scrypt hashing
+    const { authIdentity, error } = await authModule.register("emailpass", {
+      body: {
+        email,
+        password,
       },
     })
 
-    console.log(`  🎉 Admin user ${email} successfully provisioned!`)
+    if (error) {
+      console.error(`  ❌ Error registering auth:`, error)
+      return
+    }
+
+    if (authIdentity) {
+      await authModule.updateAuthIdentities({
+        id: authIdentity.id,
+        app_metadata: {
+          user_id: user.id,
+        },
+      })
+      console.log(`  🎉 Admin user ${email} successfully registered & linked to user profile!`)
+    }
   } catch (error: any) {
     console.error(`  ❌ Error provisioning admin:`, error.message || error)
   }
