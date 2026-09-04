@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import StoreToolbar from "@modules/store/components/store-toolbar"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -30,76 +30,93 @@ export default function CategoryTemplate({
 
   const parents = [] as HttpTypes.StoreProductCategory[]
 
-  const getParents = (category: HttpTypes.StoreProductCategory) => {
-    if (category.parent_category) {
-      parents.push(category.parent_category)
-      getParents(category.parent_category)
+  const getParents = (cat: HttpTypes.StoreProductCategory) => {
+    if (cat.parent_category) {
+      parents.push(cat.parent_category)
+      getParents(cat.parent_category)
     }
   }
 
   getParents(category)
 
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList
-        sortBy={sort}
-        data-testid="sort-by-container"
-        hideOptionsPicker
-      />
-      <div className="w-full">
-        <div className="flex flex-row mb-8 text-2xl-semi gap-4">
-          {parents &&
-            parents.map((parent) => (
-              <span key={parent.id} className="text-ui-fg-subtle">
+    <div className="bg-white min-h-screen" data-testid="category-container">
+      {/* Editorial Header Banner */}
+      <div className="border-b border-gray-100 bg-[#faf9f6] py-10">
+        <div className="content-container max-w-7xl mx-auto">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-gray-500 mb-3">
+            <LocalizedClientLink href="/" className="hover:text-black transition-colors">
+              Home
+            </LocalizedClientLink>
+            <span>/</span>
+            <LocalizedClientLink href="/categories" className="hover:text-black transition-colors">
+              Categories
+            </LocalizedClientLink>
+            {parents.map((parent) => (
+              <span key={parent.id} className="flex items-center gap-2">
+                <span>/</span>
                 <LocalizedClientLink
-                  className="mr-4 hover:text-black"
                   href={`/categories/${parent.handle}`}
-                  data-testid="sort-by-link"
+                  className="hover:text-black transition-colors"
                 >
                   {parent.name}
                 </LocalizedClientLink>
-                /
               </span>
             ))}
-          <h1 data-testid="category-page-title">{category.name}</h1>
+            <span>/</span>
+            <span className="text-black font-semibold">{category.name}</span>
+          </div>
+
+          <div className="max-w-3xl">
+            <h1 
+              className="text-3xl sm:text-5xl font-bold tracking-tight text-black uppercase mb-3"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+              data-testid="category-page-title"
+            >
+              {category.name}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 font-light leading-relaxed">
+              {category.description || "Discover handcrafted pieces tailored with traditional artisanal techniques and contemporary finesse."}
+            </p>
+          </div>
         </div>
-        {category.description && (
-          <div className="mb-8 text-base-regular">
-            <p>{category.description}</p>
-          </div>
-        )}
-        {category.category_children && (
-          <div className="mb-8 text-base-large">
-            <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
-                <li key={c.id}>
-                  <InteractiveLink href={`/categories/${c.handle}`}>
-                    {c.name}
-                  </InteractiveLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <Suspense
-          fallback={
-            <SkeletonProductGrid
-              numberOfProducts={category.products?.length ?? 8}
+      </div>
+
+      {/* Main Content Layout */}
+      <div className="content-container max-w-7xl mx-auto py-10">
+        <div className="flex flex-col lg:flex-row gap-x-10 gap-y-8">
+          {/* Compact Left Sidebar */}
+          <aside className="w-full lg:w-60 flex-shrink-0">
+            <RefinementList
+              sortBy={sort}
+              data-testid="sort-by-container"
             />
-          }
-        >
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            categoryId={category.id}
-            countryCode={countryCode}
-            optionValueIds={optionValueIds}
-          />
-        </Suspense>
+          </aside>
+
+          {/* Product Grid Area */}
+          <main className="w-full flex-1">
+            <StoreToolbar sortBy={sort} />
+
+            <Suspense
+              fallback={
+                <SkeletonProductGrid
+                  numberOfProducts={category.products?.length ?? 6}
+                />
+              }
+            >
+              <PaginatedProducts
+                sortBy={sort}
+                page={pageNumber}
+                categoryId={category.id}
+                countryCode={countryCode}
+                optionValueIds={optionValueIds}
+              />
+            </Suspense>
+          </main>
+        </div>
       </div>
     </div>
   )
 }
+

@@ -3,10 +3,11 @@ import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useActionState } from "react"
 
 type Props = {
-  setCurrentView: (view: LOGIN_VIEW) => void
+  setCurrentView?: (view: LOGIN_VIEW) => void
 }
 
 const Login = ({ setCurrentView }: Props) => {
@@ -14,26 +15,41 @@ const Login = ({ setCurrentView }: Props) => {
 
   return (
     <div
-      className="max-w-sm w-full flex flex-col items-center"
+      className="max-w-sm w-full flex flex-col items-center mx-auto"
       data-testid="login-page"
     >
-      <h1 className="text-large-semi uppercase mb-6">Welcome back</h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-8">
-        Sign in to access an enhanced shopping experience.
-      </p>
+      <div className="text-center mb-6">
+        <div className="inline-flex items-center gap-1.5 mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#cda434]" />
+          <span className="text-[10px] tracking-[0.2em] uppercase text-gray-500 font-semibold">
+            Member Access
+          </span>
+        </div>
+        <h1 
+          className="text-2xl font-bold uppercase tracking-tight text-black"
+          style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+        >
+          Welcome Back
+        </h1>
+        <p className="text-xs text-gray-500 font-light mt-1 max-w-xs mx-auto leading-relaxed">
+          Sign in to your Sasa by Sakshi account to view orders, wishlist, and manage your delivery details.
+        </p>
+      </div>
+
       {message?.state === "verification_required" && (
         <div
-          className="w-full mb-6 text-center text-base-regular text-ui-fg-base bg-ui-bg-subtle border border-ui-border-base rounded-rounded p-4"
+          className="w-full mb-6 text-center text-xs text-black bg-[#faf9f6] border border-[#cda434]/40 rounded-sm p-4"
           data-testid="login-verification-message"
         >
           We sent a verification link to <strong>{message.email}</strong>.
           Please verify your email, then sign in.
         </div>
       )}
+
       <form className="w-full" action={formAction}>
-        <div className="flex flex-col w-full gap-y-2">
+        <div className="flex flex-col w-full gap-y-3">
           <Input
-            label="Email"
+            label="Email address"
             name="email"
             type="email"
             title="Enter a valid email address."
@@ -49,12 +65,25 @@ const Login = ({ setCurrentView }: Props) => {
             required
             data-testid="password-input"
           />
+          <div className="flex justify-end">
+            <LocalizedClientLink
+              href="/account/forgot-password"
+              className="text-[11px] text-gray-500 hover:text-black underline transition-colors"
+            >
+              Forgot password?
+            </LocalizedClientLink>
+          </div>
         </div>
+
         <ErrorMessage
           error={message?.state === "error" ? message.error : null}
           data-testid="login-error-message"
         />
-        <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
+
+        <SubmitButton 
+          data-testid="sign-in-button" 
+          className="w-full mt-6 h-11 bg-black text-white hover:bg-gray-800 transition-colors uppercase tracking-[0.15em] text-xs font-semibold"
+        >
           Sign in
         </SubmitButton>
       </form>
@@ -62,13 +91,13 @@ const Login = ({ setCurrentView }: Props) => {
       {/* Google OAuth Login */}
       <div className="w-full my-6 flex items-center gap-x-3">
         <div className="flex-1 h-[1px] bg-gray-200" />
-        <span className="text-xs uppercase text-gray-400 font-medium">Or</span>
+        <span className="text-[10px] uppercase text-gray-400 font-semibold tracking-wider">Or</span>
         <div className="flex-1 h-[1px] bg-gray-200" />
       </div>
 
       <a
         href={`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"}/auth/customer/google`}
-        className="w-full h-11 border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center gap-x-3 text-sm font-medium text-gray-700 transition-colors shadow-sm"
+        className="w-full h-11 border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center gap-x-3 text-xs font-medium text-gray-700 transition-colors shadow-sm uppercase tracking-wider"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24">
           <path
@@ -91,19 +120,29 @@ const Login = ({ setCurrentView }: Props) => {
         <span>Continue with Google</span>
       </a>
 
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Not a member?{" "}
-        <button
-          onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-          className="underline"
-          data-testid="register-button"
-        >
-          Join us
-        </button>
-        .
-      </span>
+      <div className="text-center text-xs text-gray-500 mt-6">
+        Not a member yet?{" "}
+        {setCurrentView ? (
+          <button
+            onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
+            className="text-black font-semibold underline hover:text-[#cda434] transition-colors"
+            data-testid="register-button"
+          >
+            Create an account
+          </button>
+        ) : (
+          <LocalizedClientLink
+            href="/account/register"
+            className="text-black font-semibold underline hover:text-[#cda434] transition-colors"
+            data-testid="register-button"
+          >
+            Create an account
+          </LocalizedClientLink>
+        )}
+      </div>
     </div>
   )
 }
 
 export default Login
+

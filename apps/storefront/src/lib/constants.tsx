@@ -30,10 +30,25 @@ export const paymentInfoMap: Record<
     icon: <PayPal />,
   },
   pp_system_default: {
-    title: "Manual Payment",
+    title: "Cash on Delivery (COD)",
     icon: <CreditCard />,
   },
-  // Add more payment providers here
+  pp_esewa_esewa: {
+    title: "eSewa Mobile Wallet",
+    icon: (
+      <span className="w-5 h-5 rounded-full bg-[#60BB46] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+        eS
+      </span>
+    ),
+  },
+  pp_khalti_khalti: {
+    title: "Khalti / Mobile Banking / connectIPS",
+    icon: (
+      <span className="w-5 h-5 rounded-full bg-[#5C2D91] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+        K
+      </span>
+    ),
+  },
 }
 
 // This only checks if it is native stripe or medusa payments for card payments, it ignores the other stripe-based providers
@@ -48,6 +63,12 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+export const isEsewa = (providerId?: string) => {
+  return providerId?.startsWith("pp_esewa")
+}
+export const isKhalti = (providerId?: string) => {
+  return providerId?.startsWith("pp_khalti")
 }
 
 // Add currencies that don't need to be divided by 100

@@ -1,79 +1,61 @@
 "use client"
 
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useRef } from "react"
+import { HttpTypes } from "@medusajs/types"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { getProductPrice } from "@lib/util/get-product-price"
+import Image from "next/image"
 
-const bestSellers = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=600&h=800&fit=crop&crop=top",
-    name: "Quarter-Zip Camel Sweater",
-    price: "$89.00",
-    badge: null,
-    href: "/store",
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop&crop=top",
-    name: "Contrast Stitch Utility Jacket",
-    price: "$169.00",
-    badge: "NEW",
-    href: "/store",
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1516826957135-700dedea698c?w=600&h=800&fit=crop&crop=top",
-    name: "Graphic Logo Cotton Tee",
-    price: "$49.00",
-    oldPrice: "$59.00",
-    badge: null,
-    href: "/store",
-  },
-  {
-    id: 4,
-    image: "https://images.unsplash.com/photo-1578932750294-f5075e85f44a?w=600&h=800&fit=crop&crop=top",
-    name: "Minimalist Beige Coat",
-    price: "$210.00",
-    badge: "SALE",
-    href: "/store",
-  }
-]
+type BestSellerProps = {
+  products: HttpTypes.StoreProduct[]
+  region: HttpTypes.StoreRegion
+}
 
-export default function BestSeller() {
+export default function BestSeller({ products, region }: BestSellerProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scrollRight = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+      scrollRef.current.scrollBy({ left: 320, behavior: "smooth" })
     }
   }
 
   const scrollLeft = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' })
+      scrollRef.current.scrollBy({ left: -320, behavior: "smooth" })
     }
   }
 
+  if (!products || products.length === 0) {
+    return null
+  }
+
   return (
-    <section className="w-full py-12 bg-white relative group">
-      <div className="content-container">
+    <section className="w-full py-16 bg-white relative group" id="best-seller">
+      <div className="content-container max-w-7xl mx-auto">
         {/* Header Row */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold tracking-tight text-black uppercase">
-            Best Seller
-          </h2>
-          <div className="hidden small:flex items-center gap-x-6">
-            <LocalizedClientLink
-              href="/store?gender=men"
-              className="text-[11px] tracking-[0.15em] uppercase font-medium text-gray-700 hover:text-black border-b border-gray-700 hover:border-black transition-colors duration-200 pb-0.5"
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+          <div>
+            <div className="inline-flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#cda434]" />
+              <span className="text-[10px] tracking-[0.2em] uppercase text-gray-500 font-semibold">
+                Trending Right Now
+              </span>
+            </div>
+            <h2 
+              className="text-2xl sm:text-3xl font-bold tracking-tight text-black uppercase"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
             >
-              Shop for Men
-            </LocalizedClientLink>
+              Best Sellers
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-x-6">
             <LocalizedClientLink
-              href="/store?gender=women"
-              className="text-[11px] tracking-[0.15em] uppercase font-medium text-gray-700 hover:text-black border-b border-gray-700 hover:border-black transition-colors duration-200 pb-0.5"
+              href="/store"
+              className="text-xs tracking-[0.15em] uppercase font-semibold text-black hover:text-[#cda434] transition-colors duration-200 border-b border-black pb-0.5"
             >
-              Shop for Women
+              Explore All Kurthas
             </LocalizedClientLink>
           </div>
         </div>
@@ -82,100 +64,138 @@ export default function BestSeller() {
         <div className="relative">
           <div 
             ref={scrollRef}
-            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 small:gap-6 pb-4"
+            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 sm:gap-6 pb-4"
           >
-            {bestSellers.map((product) => (
-              <div 
-                key={product.id}
-                className="w-[85vw] small:w-[calc(33.333%-16px)] medium:w-[calc(25%-18px)] flex-shrink-0 snap-start group/card relative"
-              >
-                {/* Invisible overlay link that covers the entire card so the whole card is clickable */}
-                <LocalizedClientLink href={product.href} className="absolute inset-0 z-10">
-                  <span className="sr-only">Go to {product.name}</span>
-                </LocalizedClientLink>
+            {products.map((product) => {
+              const { cheapestPrice } = getProductPrice({ product })
+              const isSale = cheapestPrice && cheapestPrice.price_type === "sale"
+              const hoverImage = product.images?.find((img) => img.url !== product.thumbnail)?.url
+              const sizeOption = product.options?.find((o) => o.title?.toLowerCase() === "size")
 
-                <div className="block relative bg-[#f5f5f3] mb-4 aspect-[3/4] overflow-hidden pointer-events-none">
-                  {/* Badges (z-20 to be above the overlay link, pointer-events-auto to be clickable) */}
-                  <div className="absolute top-3 left-3 z-20 flex flex-col gap-1 pointer-events-auto">
-                    {product.badge === "NEW" && (
-                      <LocalizedClientLink 
-                        href="/store"
-                        className="bg-white border border-black text-black text-[10px] px-2 py-0.5 tracking-wider uppercase hover:bg-black hover:text-white transition-colors"
+              return (
+                <div 
+                  key={product.id}
+                  className="w-[75vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start group/card relative"
+                >
+                  {/* Product Image Container */}
+                  <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#f7f7f7] rounded-sm mb-3">
+                    <LocalizedClientLink 
+                      href={`/products/${product.handle}`} 
+                      className="absolute inset-0 z-0 block"
+                    >
+                      {product.thumbnail ? (
+                        <Image
+                          src={product.thumbnail}
+                          alt={product.title}
+                          fill
+                          className={`object-cover object-top transition-all duration-700 ease-out ${
+                            hoverImage ? "group-hover/card:opacity-0 group-hover/card:scale-105" : "group-hover/card:scale-105"
+                          }`}
+                          sizes="(max-width: 576px) 75vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
+                          No Image Available
+                        </div>
+                      )}
+
+                      {hoverImage && (
+                        <Image
+                          src={hoverImage}
+                          alt={`${product.title} alternate view`}
+                          fill
+                          className="object-cover object-top absolute inset-0 opacity-0 group-hover/card:opacity-100 group-hover/card:scale-105 transition-all duration-700 ease-out"
+                          sizes="(max-width: 576px) 75vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        />
+                      )}
+                    </LocalizedClientLink>
+
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
+                      {isSale ? (
+                        <span className="bg-[#cc2127] text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-[2px] shadow-sm">
+                          Sale
+                        </span>
+                      ) : (
+                        <span className="bg-black text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-[2px] shadow-sm">
+                          Best Seller
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Quick Choose Options Button on hover */}
+                    <div className="absolute inset-x-3 bottom-3 z-10 translate-y-4 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-300">
+                      <LocalizedClientLink
+                        href={`/products/${product.handle}`}
+                        className="w-full py-2.5 bg-white/95 backdrop-blur-md text-black hover:bg-black hover:text-white transition-colors duration-200 text-[10px] font-bold uppercase tracking-[0.15em] flex items-center justify-center gap-1.5 shadow-md rounded-sm border border-gray-100"
                       >
-                        New
+                        <span>Choose Options</span>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
                       </LocalizedClientLink>
-                    )}
-                    {product.badge === "SALE" && (
-                      <LocalizedClientLink 
-                        href="/store" 
-                        className="bg-[#cc2127] border border-[#cc2127] text-white text-[10px] px-2 py-0.5 tracking-wider uppercase hover:bg-white hover:text-[#cc2127] transition-colors"
-                      >
-                        Sale
-                      </LocalizedClientLink>
-                    )}
+                    </div>
                   </div>
 
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/card:scale-105 pointer-events-none"
-                  />
-                </div>
+                  {/* Product Details */}
+                  <div className="flex flex-col gap-1">
+                    {sizeOption && sizeOption.values && sizeOption.values.length > 0 && (
+                      <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+                        {sizeOption.values.map((v) => v.value).join(" · ")}
+                      </span>
+                    )}
 
-                {/* Info matching the new product preview style */}
-                <div className="flex justify-between items-start gap-2">
-                  <h3 className="text-sm text-black font-medium leading-tight truncate flex-1">
-                    {product.name}
-                  </h3>
-                  <div className="text-xs flex gap-x-2 relative z-20 pointer-events-auto">
-                    {product.oldPrice && <span className="text-gray-400 line-through">{product.oldPrice}</span>}
-                    <span className={product.oldPrice ? "text-red-500" : "text-gray-700"}>{product.price}</span>
+                    <LocalizedClientLink 
+                      href={`/products/${product.handle}`}
+                      className="hover:text-[#cda434] transition-colors"
+                    >
+                      <h3 className="text-sm font-medium text-black leading-snug line-clamp-1">
+                        {product.title}
+                      </h3>
+                    </LocalizedClientLink>
+
+                    {cheapestPrice && (
+                      <div className="flex items-center gap-2 pt-0.5">
+                        {isSale && (
+                          <span className="text-xs text-gray-400 line-through">
+                            {cheapestPrice.original_price}
+                          </span>
+                        )}
+                        <span className={`text-sm font-semibold ${isSale ? "text-[#cc2127]" : "text-gray-900"}`}>
+                          {cheapestPrice.calculated_price}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="mt-2 relative z-20 pointer-events-auto w-fit">
-                  <LocalizedClientLink href={product.href} className="text-[10px] tracking-[0.05em] text-gray-500 uppercase border-b border-gray-500 hover:text-black hover:border-black transition-colors cursor-pointer">
-                    Choose Options
-                  </LocalizedClientLink>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Navigation Arrows */}
           <button 
+            type="button"
             onClick={scrollLeft}
-            className="absolute -left-4 top-1/3 -translate-y-1/2 w-10 h-10 bg-white shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden small:flex hover:bg-black hover:text-white z-20 pointer-events-auto"
+            aria-label="Previous products"
+            className="absolute -left-3 top-1/3 -translate-y-1/2 w-10 h-10 bg-white/95 shadow-md border border-gray-100 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex hover:bg-black hover:text-white z-20"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
           <button 
+            type="button"
             onClick={scrollRight}
-            className="absolute -right-4 top-1/3 -translate-y-1/2 w-10 h-10 bg-white shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden small:flex hover:bg-black hover:text-white z-20 pointer-events-auto"
+            aria-label="Next products"
+            className="absolute -right-3 top-1/3 -translate-y-1/2 w-10 h-10 bg-white/95 shadow-md border border-gray-100 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex hover:bg-black hover:text-white z-20"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
           </button>
-        </div>
-
-        {/* Mobile Shop Links */}
-        <div className="flex items-center justify-center gap-x-6 mt-6 small:hidden">
-          <LocalizedClientLink
-            href="/store?gender=men"
-            className="text-[11px] tracking-[0.15em] uppercase font-medium text-gray-700 hover:text-black border-b border-gray-700 hover:border-black transition-colors duration-200 pb-0.5"
-          >
-            Shop for Men
-          </LocalizedClientLink>
-          <LocalizedClientLink
-            href="/store?gender=women"
-            className="text-[11px] tracking-[0.15em] uppercase font-medium text-gray-700 hover:text-black border-b border-gray-700 hover:border-black transition-colors duration-200 pb-0.5"
-          >
-            Shop for Women
-          </LocalizedClientLink>
         </div>
       </div>
     </section>
   )
 }
+

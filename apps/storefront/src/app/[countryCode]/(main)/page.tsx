@@ -5,11 +5,12 @@ import Hero from "@modules/home/components/hero"
 import BestSeller from "@modules/home/components/best-seller"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
+import { listProducts } from "@lib/data/products"
 
 export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
+  title: "Sasa by Sakshi — Handcrafted Kurthas & Contemporary Ethnic Wear",
   description:
-    "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+    "Discover exclusive festive kurthas, pure fabrics, and contemporary ethnic silhouettes designed in Nepal.",
 }
 
 export default async function Home(props: {
@@ -21,9 +22,17 @@ export default async function Home(props: {
 
   const region = await getRegion(countryCode)
 
-  const { collections } = await listCollections({
-    fields: "id, handle, title",
-  })
+  const [{ collections }, { response: { products } }] = await Promise.all([
+    listCollections({
+      fields: "id, handle, title",
+    }),
+    listProducts({
+      countryCode,
+      queryParams: {
+        limit: 8,
+      },
+    }),
+  ])
 
   if (!collections || !region) {
     return null
@@ -32,7 +41,7 @@ export default async function Home(props: {
   return (
     <>
       <Hero />
-      <BestSeller />
+      <BestSeller products={products} region={region} />
       <div className="py-12">
         <ul className="flex flex-col gap-x-6">
           <FeaturedProducts collections={collections} region={region} />
@@ -41,3 +50,4 @@ export default async function Home(props: {
     </>
   )
 }
+

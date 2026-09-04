@@ -6,14 +6,15 @@ export default async function createAdminUser({ container }: ExecArgs) {
   const authModule = container.resolve(Modules.AUTH)
 
   const email = (process.env.MEDUSA_ADMIN_EMAIL || "admin@sasabysakshi.com").toLowerCase().trim()
-  const password = process.env.MEDUSA_ADMIN_PASSWORD || "password123"
+  const password = process.env.MEDUSA_ADMIN_PASSWORD || "AdminPassword123!"
 
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
   console.log(`  👤 Configuring Admin User: ${email}`)
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
 
-  let user: any
   try {
+    // 1. Ensure user profile exists
+    let user: any
     const existingUsers = await userModule.listUsers({ email })
     if (existingUsers && existingUsers.length > 0) {
       user = existingUsers[0]
@@ -27,44 +28,53 @@ export default async function createAdminUser({ container }: ExecArgs) {
       console.log(`  ✅ Created user profile: ${user.id}`)
     }
 
-    // Clean up old auth identity so authModule.register creates a fresh scrypt KDF hash
-    try {
-      const identities = await authModule.listAuthIdentities({
-        provider_identities: {
-          entity_id: email,
-          provider: "emailpass",
-        },
-      } as any)
+    // 2. Ensure auth identity exists and password is synchronized
+    let authIdentity: any
 
-      if (identities && identities.length > 0) {
-        await authModule.deleteAuthIdentities(identities.map((i: any) => i.id))
-        console.log(`  🔄 Reset existing auth identity`)
-      }
-    } catch (err: any) {
-      // Ignore if not found
-    }
-
-    // Use official authModule.register to perform proper scrypt hashing
-    const { authIdentity, error } = await authModule.register("emailpass", {
+    const registerRes = await authModule.register("emailpass", {
       body: {
         email,
         password,
       },
     })
 
-    if (error) {
-      console.error(`  ❌ Error registering auth:`, error)
-      return
+    if (registerRes.success && registerRes.authIdentity) {
+      authIdentity = registerRes.authIdentity
+      console.log(`  ✅ Registered new auth identity: ${authIdentity.id}`)
+    } else {
+      // Auth identity already existed -> update password
+      console.log(`  ℹ️ Auth identity exists, updating password hash...`)
+      const updateRes = await authModule.updateProvider("emailpass", {
+        entity_id: email,
+        password,
+      })
+
+      if (updateRes.error) {
+        console.warn(`  ⚠️ updateProvider notice: ${updateRes.error}`)
+      } else {
+        console.log(`  ✅ Password synchronized successfully for ${email}`)
+      }
+
+      // Retrieve identity to link app_metadata
+      try {
+        const authProviderService = (authModule as any).getAuthIdentityProviderService("emailpass")
+        authIdentity = await authProviderService.retrieve({ entity_id: email })
+      } catch (err: any) {
+        console.warn(`  ⚠️ Could not retrieve auth identity via provider service:`, err.message || err)
+      }
     }
 
-    if (authIdentity) {
+    // 3. Link authIdentity to user profile via app_metadata.user_id
+    if (authIdentity && authIdentity.id) {
       await authModule.updateAuthIdentities({
         id: authIdentity.id,
         app_metadata: {
           user_id: user.id,
         },
       })
-      console.log(`  🎉 Admin user ${email} successfully registered & linked to user profile!`)
+      console.log(`  🎉 Admin user ${email} successfully linked to user profile (${user.id})!`)
+    } else {
+      console.error(`  ❌ Failed to resolve authIdentity for ${email}`)
     }
   } catch (error: any) {
     console.error(`  ❌ Error provisioning admin:`, error.message || error)

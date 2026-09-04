@@ -18,31 +18,48 @@ type RefinementListProps = {
   "data-testid"?: string
 }
 
-// Helper Accordion Component
-function FilterAccordion({ title, defaultOpen = false, children }: { title: string, defaultOpen?: boolean, children: React.ReactNode }) {
+function FilterSection({ 
+  title, 
+  defaultOpen = true, 
+  children 
+}: { 
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode 
+}) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-b border-gray-100 py-4">
       <button 
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between w-full text-left"
+        className="flex items-center justify-between w-full text-left py-1 group"
       >
-        <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-black">{title}</span>
+        <span className="text-xs font-bold tracking-[0.12em] uppercase text-black group-hover:text-[#cda434] transition-colors">
+          {title}
+        </span>
         <svg
-          className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
           {children}
         </div>
       )}
     </div>
   )
 }
+
+const categoriesList = [
+  { name: "All Products", handle: "" },
+  { name: "Kurthas", handle: "kurthas" },
+  { name: "Silk Sets", handle: "sweatshirts" },
+  { name: "Shirts", handle: "shirts" },
+  { name: "Pants & Trousers", handle: "pants" },
+]
 
 const RefinementList = ({
   sortBy,
@@ -90,127 +107,114 @@ const RefinementList = ({
       )
     })
 
+  const clearAllFilters = () => {
+    router.push(pathname)
+  }
+
+  const hasActiveFilters = selectedOptionValueIds.length > 0 || searchParams.get("sortBy")
+
   return (
-    <div className="flex flex-col w-full pr-8" data-testid={dataTestId}>
-      
-      {/* Sidebar Navigation Links */}
-      <div className="flex flex-col gap-y-4 mb-10">
-        <LocalizedClientLink href="/collections" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Collections
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/store" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Product
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/blog" className="text-[11px] uppercase tracking-wide text-black font-semibold flex items-center">
-          <span className="text-gray-400 mr-1">{">"}</span> Blog
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/pages" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Pages
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/categories" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          New In
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/trend" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Trend
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/store" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Shop
-        </LocalizedClientLink>
-        <LocalizedClientLink href="/buy" className="text-[11px] uppercase tracking-wide text-gray-600 hover:text-black">
-          Buy SASA
-        </LocalizedClientLink>
-      </div>
-
-      {/* Refined By (Mock) */}
-      <div className="mb-6">
-        <h3 className="text-[11px] font-bold tracking-[0.1em] uppercase text-black mb-1">
-          Refined By:
-        </h3>
-        <p className="text-xs text-gray-500">22 products</p>
-      </div>
-
-      {/* Filters Accordions */}
-      <div className="flex flex-col border-t border-gray-100">
-        
-        {/* Category Mock Filter */}
-        <FilterAccordion title="Category" defaultOpen={true}>
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-4 h-4 border border-gray-300 flex items-center justify-center group-hover:border-black transition-colors">
-                {/* Checkmark icon for active state would go here */}
-              </div>
-              <span className="text-[11px] uppercase text-gray-700">Sweaters</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-4 h-4 border border-gray-300 flex items-center justify-center group-hover:border-black transition-colors"></div>
-              <span className="text-[11px] uppercase text-gray-700">Tops</span>
-            </label>
-          </div>
-        </FilterAccordion>
-
-        {/* Price Filter */}
-        <FilterAccordion title="Price">
-          <div className="text-xs text-gray-500 py-2">Price slider placeholder</div>
-        </FilterAccordion>
-
-        {/* Other Filters (using existing OptionsPicker if we want Medusa standard variants) */}
-        {!hideOptionsPicker && (
-          <FilterAccordion title="More Filters">
-             <OptionsPicker
-              selectedValueIds={selectedOptionValueIds}
-              setOptionValueIds={setOptionValueIds}
-            />
-          </FilterAccordion>
+    <div className="flex flex-col w-full" data-testid={dataTestId}>
+      {/* Filters Title & Reset */}
+      <div className="flex items-center justify-between pb-3 border-b border-black">
+        <span className="text-xs font-bold tracking-[0.2em] uppercase text-black">
+          Refine By
+        </span>
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="text-[10px] uppercase tracking-wider text-gray-500 hover:text-black transition-colors underline"
+          >
+            Clear All
+          </button>
         )}
+      </div>
 
-        <FilterAccordion title="Brand">
-          <div className="text-xs text-gray-500 py-2">Brand filters...</div>
-        </FilterAccordion>
-        
-        <FilterAccordion title="Availability">
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-4 h-4 border border-gray-300"></div>
-              <span className="text-[11px] uppercase text-gray-700">In Stock</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-4 h-4 border border-gray-300"></div>
-              <span className="text-[11px] uppercase text-gray-700">Out of Stock</span>
-            </label>
-          </div>
-        </FilterAccordion>
-        
-        <FilterAccordion title="Color">
-          <div className="flex flex-wrap gap-2">
-             <button className="w-6 h-6 rounded-full border border-gray-300 bg-black" title="Black"></button>
-             <button className="w-6 h-6 rounded-full border border-gray-300 bg-white" title="White"></button>
-             <button className="w-6 h-6 rounded-full border border-gray-300 bg-blue-500" title="Blue"></button>
-          </div>
-        </FilterAccordion>
-        
-        <FilterAccordion title="Size">
-          <div className="flex flex-wrap gap-2">
-             <button className="px-2 py-1 border border-gray-300 text-[10px] hover:border-black">S</button>
-             <button className="px-2 py-1 border border-gray-300 text-[10px] hover:border-black">M</button>
-             <button className="px-2 py-1 border border-gray-300 text-[10px] hover:border-black">L</button>
-             <button className="px-2 py-1 border border-gray-300 text-[10px] hover:border-black">XL</button>
-          </div>
-        </FilterAccordion>
+      {/* Category Links */}
+      <FilterSection title="Categories" defaultOpen={true}>
+        <div className="flex flex-col gap-y-2.5">
+          {categoriesList.map((cat) => {
+            const href = cat.handle ? `/categories/${cat.handle}` : "/store"
+            const isActive = cat.handle ? pathname.includes(cat.handle) : pathname.endsWith("/store")
 
-        {/* Featured Products Sidebar Widget */}
-        <FilterAccordion title="Featured Products">
-          <div className="flex items-center gap-4 py-2 group cursor-pointer">
-            <div className="w-16 h-20 bg-gray-100 overflow-hidden relative">
-              {/* Note: In a real app we'd map over products here. Hardcoding structural placeholder. */}
-              <div className="absolute inset-0 bg-gray-200"></div>
-            </div>
-            <div className="flex flex-col">
-               <span className="text-xs text-black font-medium">Sample Product</span>
-               <span className="text-[11px] text-gray-500">$99.00</span>
-            </div>
-          </div>
-        </FilterAccordion>
+            return (
+              <LocalizedClientLink
+                key={cat.name}
+                href={href}
+                className={`text-xs uppercase tracking-wider transition-colors flex items-center justify-between ${
+                  isActive
+                    ? "font-bold text-black"
+                    : "text-gray-600 hover:text-black font-normal"
+                }`}
+              >
+                <span>{cat.name}</span>
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#cda434]" />}
+              </LocalizedClientLink>
+            )
+          })}
+        </div>
+      </FilterSection>
 
+      {/* Dynamic Variant Options Filter (Sizes, Colors) */}
+      {!hideOptionsPicker && (
+        <FilterSection title="Sizes & Variants" defaultOpen={true}>
+          <OptionsPicker
+            selectedValueIds={selectedOptionValueIds}
+            setOptionValueIds={setOptionValueIds}
+          />
+        </FilterSection>
+      )}
+
+      {/* Sort By Filter */}
+      <FilterSection title="Sort Order" defaultOpen={false}>
+        <div className="flex flex-col gap-y-2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="radio"
+              name="sort_sidebar"
+              checked={sortBy === "created_at" || !sortBy}
+              onChange={() => setQueryParams("sortBy", "created_at")}
+              className="accent-black w-3.5 h-3.5 cursor-pointer"
+            />
+            <span className="text-xs text-gray-700 uppercase tracking-wide group-hover:text-black">
+              Latest Arrivals
+            </span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="radio"
+              name="sort_sidebar"
+              checked={sortBy === "price_asc"}
+              onChange={() => setQueryParams("sortBy", "price_asc")}
+              className="accent-black w-3.5 h-3.5 cursor-pointer"
+            />
+            <span className="text-xs text-gray-700 uppercase tracking-wide group-hover:text-black">
+              Price: Low to High
+            </span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="radio"
+              name="sort_sidebar"
+              checked={sortBy === "price_desc"}
+              onChange={() => setQueryParams("sortBy", "price_desc")}
+              className="accent-black w-3.5 h-3.5 cursor-pointer"
+            />
+            <span className="text-xs text-gray-700 uppercase tracking-wide group-hover:text-black">
+              Price: High to Low
+            </span>
+          </label>
+        </div>
+      </FilterSection>
+
+      {/* Delivery Help Card */}
+      <div className="mt-8 p-4 bg-[#faf9f6] border border-gray-100 rounded-sm">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-black block mb-1">
+          🇳🇵 Nationwide Delivery
+        </span>
+        <p className="text-[11px] text-gray-600 leading-relaxed font-light">
+          Enjoy Cash on Delivery and prompt dispatch inside Kathmandu Valley and major hubs across Nepal.
+        </p>
       </div>
     </div>
   )

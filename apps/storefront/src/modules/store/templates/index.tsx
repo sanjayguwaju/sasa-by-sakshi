@@ -23,40 +23,55 @@ const StoreTemplate = ({
   const sort = sortBy || "created_at"
 
   return (
-    <div className="flex flex-col md:flex-row py-10 content-container gap-x-8">
-      {/* 25% Left Sidebar */}
-      <div className="w-full md:w-[25%] flex-shrink-0">
-        <RefinementList sortBy={sort} />
-      </div>
-      
-      {/* 75% Right Main Content */}
-      <div className="w-full md:w-[75%]">
-        
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold uppercase tracking-tight text-black mb-4">
-            Classic - All
-          </h1>
-          <p className="text-sm text-gray-700 leading-relaxed max-w-4xl">
-            The Classic Collection celebrates timeless silhouettes and refined simplicity. Each piece is designed to blend effortlessly into modern life — from tailored essentials to soft everyday layers. Discover minimal fashion that never fades, where comfort meets enduring elegance.
-          </p>
+    <div className="bg-white min-h-screen">
+      {/* Editorial Header Banner */}
+      <div className="border-b border-gray-100 bg-[#faf9f6] py-12">
+        <div className="content-container max-w-7xl mx-auto">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border border-gray-200 bg-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#cda434]" />
+              <span className="text-[10px] sm:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-semibold">
+                Sasa Exclusive Catalogue
+              </span>
+            </div>
+            <h1 
+              className="text-3xl sm:text-5xl font-bold tracking-tight text-black uppercase mb-3"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            >
+              All Kurthas & Attire
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 font-light leading-relaxed">
+              Explore handcrafted festive kurthas, pure silk sets, and contemporary ethnic wear designed in Nepal. Cash on delivery available across all major cities.
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* View Controls Toolbar */}
-        <StoreToolbar sortBy={sort} />
+      <div className="content-container max-w-7xl mx-auto py-10">
+        <div className="flex flex-col lg:flex-row gap-x-10 gap-y-8">
+          {/* 25% Left Sidebar */}
+          <aside className="w-full lg:w-60 flex-shrink-0">
+            <RefinementList sortBy={sort} />
+          </aside>
+          
+          {/* Right Main Content */}
+          <main className="w-full flex-1">
+            <StoreToolbar sortBy={sort} />
 
-        {/* Product Grid */}
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            countryCode={countryCode}
-            optionValueIds={optionValueIds}
-          />
-        </Suspense>
+            <Suspense fallback={<SkeletonProductGrid />}>
+              <PaginatedProducts
+                sortBy={sort}
+                page={pageNumber}
+                countryCode={countryCode}
+                optionValueIds={optionValueIds}
+              />
+            </Suspense>
+          </main>
+        </div>
       </div>
     </div>
   )
 }
 
 export default StoreTemplate
+

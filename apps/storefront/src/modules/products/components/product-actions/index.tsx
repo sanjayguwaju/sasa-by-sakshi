@@ -35,18 +35,17 @@ export default function ProductActions({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [options, setOptions] = useState<Record<string, string | undefined>>({})
+  const [options, setOptions] = useState<Record<string, string | undefined>>(() => {
+    const defaultVariant =
+      product.variants?.find((v) => (v.inventory_quantity || 0) > 0) ||
+      product.variants?.[0]
+    return defaultVariant?.options
+      ? optionsAsKeymap(defaultVariant.options) ?? {}
+      : {}
+  })
   const [isAdding, setIsAdding] = useState(false)
   const [qty, setQty] = useState(1)
-  const [agreed, setAgreed] = useState(false)
   const countryCode = useParams().countryCode as string
-
-  useEffect(() => {
-    if (product.variants?.length === 1) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
-      setOptions(variantOptions ?? {})
-    }
-  }, [product.variants])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) return
@@ -91,7 +90,7 @@ export default function ProductActions({
   const inView = useIntersection(actionsRef, "0px")
 
   const handleAddToCart = async () => {
-    if (!selectedVariant?.id || !agreed) return null
+    if (!selectedVariant?.id) return null
     setIsAdding(true)
     await addToCart({
       variantId: selectedVariant.id,
@@ -205,7 +204,7 @@ export default function ProductActions({
           handleAddToCart={handleAddToCart}
           isAdding={isAdding}
           show={!inView}
-          optionsDisabled={!!disabled || isAdding || !agreed}
+          optionsDisabled={!!disabled || isAdding}
         />
       </div>
     </>

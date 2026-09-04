@@ -1,7 +1,7 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
-import { placeOrder } from "@lib/data/cart"
+import { isManual, isStripeLike, isEsewa, isKhalti } from "@lib/constants"
+import { initiatePaymentSession, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
@@ -38,6 +38,22 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    case isEsewa(paymentSession?.provider_id):
+      return (
+        <EsewaPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
+      )
+    case isKhalti(paymentSession?.provider_id):
+      return (
+        <KhaltiPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
       )
     default:
       return <Button disabled>Select a payment method</Button>
@@ -185,6 +201,161 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       <ErrorMessage
         error={errorMessage}
         data-testid="manual-payment-error-message"
+      />
+    </>
+  )
+}
+
+const EsewaPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleEsewaPayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+
+    try {
+      let session = cart.payment_collection?.payment_sessions?.find(
+        (s) => s.provider_id === "pp_esewa_esewa"
+      )
+
+      if (!session || !session.data?.signature) {
+        const res = await initiatePaymentSession(cart, {
+          provider_id: "pp_esewa_esewa",
+        })
+        session = (res as any)?.payment_collection?.payment_sessions?.find(
+          (s: any) => s.provider_id === "pp_esewa_esewa"
+        )
+      }
+
+      const data = session?.data as Record<string, any>
+      if (!data || !data.signature) {
+        throw new Error("Could not initialize eSewa payment signature.")
+      }
+
+      const formActionUrl =
+        data.form_action_url || "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+
+      // Create hidden form and submit to eSewa
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action = formActionUrl
+
+      const fields: Record<string, any> = {
+        amount: data.amount,
+        tax_amount: data.tax_amount ?? 0,
+        total_amount: data.total_amount,
+        transaction_uuid: data.transaction_uuid,
+        product_code: data.product_code,
+        product_service_charge: data.product_service_charge ?? 0,
+        product_delivery_charge: data.product_delivery_charge ?? 0,
+        success_url: data.success_url,
+        failure_url: data.failure_url,
+        signed_field_names: data.signed_field_names,
+        signature: data.signature,
+      }
+
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = key
+        input.value = String(value)
+        form.appendChild(input)
+      }
+
+      document.body.appendChild(form)
+      form.submit()
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to proceed to eSewa.")
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handleEsewaPayment}
+        size="large"
+        className="bg-[#60BB46] hover:bg-[#529f3c] text-white"
+        data-testid={dataTestId}
+      >
+        Pay with eSewa
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="esewa-payment-error-message"
+      />
+    </>
+  )
+}
+
+const KhaltiPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleKhaltiPayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+
+    try {
+      let session = cart.payment_collection?.payment_sessions?.find(
+        (s) => s.provider_id === "pp_khalti_khalti"
+      )
+
+      if (!session || !session.data?.payment_url) {
+        const res = await initiatePaymentSession(cart, {
+          provider_id: "pp_khalti_khalti",
+        })
+        session = (res as any)?.payment_collection?.payment_sessions?.find(
+          (s: any) => s.provider_id === "pp_khalti_khalti"
+        )
+      }
+
+      const paymentUrl = session?.data?.payment_url as string
+      if (!paymentUrl) {
+        throw new Error("Could not initialize Khalti checkout session.")
+      }
+
+      window.location.href = paymentUrl
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to proceed to Khalti.")
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handleKhaltiPayment}
+        size="large"
+        className="bg-[#5C2D91] hover:bg-[#4b2476] text-white"
+        data-testid={dataTestId}
+      >
+        Pay with Khalti / Mobile Banking
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="khalti-payment-error-message"
       />
     </>
   )

@@ -2,7 +2,7 @@
 
 import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { clx } from "@modules/common/components/ui"
 
 type ImageGalleryProps = {
@@ -11,8 +11,16 @@ type ImageGalleryProps = {
 
 const ImageGallery = ({ images }: ImageGalleryProps) => {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
 
-  if (!images || images.length === 0) return null
+  if (!images || images.length === 0) {
+    return (
+      <div className="relative aspect-[3/4] w-full bg-[#f7f7f7] rounded-sm flex items-center justify-center text-gray-400 text-xs">
+        No Image Available
+      </div>
+    )
+  }
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
@@ -22,121 +30,124 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
   }
 
+  // Swipe gesture handling for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      handleNext()
+    } else if (isRightSwipe) {
+      handlePrev()
+    }
+
+    touchStartX.current = null
+    touchEndX.current = null
+  }
+
   return (
-    <div className="flex flex-col w-full relative">
-      
-      {/* Mobile Slider / Desktop Grid Container */}
-      <div className="w-full">
-        {/* DESKTOP GRID (Hidden on mobile) */}
-        <div className="hidden md:grid grid-cols-2 gap-2 w-full">
+    <div className="flex flex-col-reverse lg:flex-row gap-3 lg:gap-4 w-full select-none items-center lg:items-start">
+      {/* Thumbnails list (Vertical on Desktop, Horizontal on Mobile) */}
+      {images.length > 1 && (
+        <div className="flex lg:flex-col overflow-x-auto lg:overflow-y-auto gap-2 lg:gap-3 shrink-0 hide-scrollbar max-h-[500px] lg:max-h-[70vh] py-1 w-full lg:w-auto justify-center lg:justify-start">
           {images.map((image, index) => {
+            const isActive = currentIndex === index
             return (
-              <div
-                key={image.id}
-                className="relative aspect-[3/4] w-full overflow-hidden bg-[#f5f5f3]"
-                id={image.id}
-              >
-                {index === 0 && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="bg-white border border-black text-black text-[10px] px-3 py-1 tracking-wider uppercase">
-                      New
-                    </span>
-                  </div>
+              <button
+                key={image.id || index}
+                onClick={() => setCurrentIndex(index)}
+                aria-label={`View image ${index + 1}`}
+                className={clx(
+                  "relative w-14 sm:w-16 lg:w-18 aspect-[3/4] rounded-sm overflow-hidden bg-[#f5f5f3] transition-all duration-200 shrink-0",
+                  {
+                    "ring-2 ring-black opacity-100": isActive,
+                    "opacity-60 hover:opacity-100": !isActive,
+                  }
                 )}
+              >
                 {!!image.url && (
                   <Image
                     src={image.url}
-                    priority={index <= 2 ? true : false}
-                    className="absolute inset-0 object-cover object-top"
-                    alt={`Product image ${index + 1}`}
+                    alt={`Thumbnail ${index + 1}`}
                     fill
-                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-contain object-center p-1"
+                    sizes="80px"
                   />
                 )}
-              </div>
+              </button>
             )
           })}
         </div>
+      )}
 
-        {/* MOBILE SLIDER (Hidden on desktop) */}
-        <div className="md:hidden flex flex-col w-full relative">
-          <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#f5f5f3]">
-            {/* NEW Badge */}
-            <div className="absolute top-4 left-4 z-10">
-              <span className="bg-white border border-black text-black text-[10px] px-3 py-1 tracking-wider uppercase">
-                New
-              </span>
-            </div>
+      {/* Main Slider Viewport (Constrained to max viewport height and centered) */}
+      <div 
+        className="relative flex-1 aspect-[3/4] max-h-[55vh] sm:max-h-[65vh] lg:max-h-[75vh] w-full overflow-hidden bg-[#f7f7f7] rounded-sm group flex items-center justify-center p-6"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Main Image */}
+        {!!images[currentIndex]?.url && (
+          <Image
+            key={images[currentIndex].id || currentIndex}
+            src={images[currentIndex].url}
+            priority={true}
+            className="object-contain object-center p-4 sm:p-8 animate-in fade-in duration-300"
+            alt={`Product view ${currentIndex + 1}`}
+            fill
+            sizes="(min-width: 1024px) 55vw, 100vw"
+          />
+        )}
 
-            {/* Main Image */}
-            {!!images[currentIndex]?.url && (
-              <Image
-                src={images[currentIndex].url}
-                priority={true}
-                className="absolute inset-0 object-cover object-top"
-                alt={`Product image ${currentIndex + 1}`}
-                fill
-                sizes="100vw"
-              />
-            )}
+        {/* Previous Button */}
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous image"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-black hover:bg-black hover:text-white transition-all duration-200 opacity-90 sm:opacity-0 group-hover:opacity-100 z-20"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
 
-            {/* Slider Navigation Arrows */}
-            {images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-x-2 z-10">
-                <button 
-                  onClick={handlePrev}
-                  className="w-10 h-10 bg-white flex items-center justify-center shadow-sm hover:bg-gray-50"
-                  aria-label="Previous image"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2c4e43" strokeWidth="1.5">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                  </svg>
-                </button>
-                <button 
-                  onClick={handleNext}
-                  className="w-10 h-10 bg-white flex items-center justify-center shadow-sm hover:bg-gray-50"
-                  aria-label="Next image"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2c4e43" strokeWidth="1.5">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </button>
-              </div>
-            )}
+        {/* Next Button */}
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next image"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-black hover:bg-black hover:text-white transition-all duration-200 opacity-90 sm:opacity-0 group-hover:opacity-100 z-20"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+
+        {/* Slide Counter Badge */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-full tracking-wider z-20">
+            {currentIndex + 1} / {images.length}
           </div>
-
-          {/* Mobile Thumbnails */}
-          {images.length > 1 && (
-            <div className="flex overflow-x-auto gap-2 mt-2 snap-x snap-mandatory hide-scrollbar">
-              {images.map((img, idx) => (
-                <button 
-                  key={img.id} 
-                  onClick={() => setCurrentIndex(idx)}
-                  className={clx(
-                    "relative w-20 aspect-[3/4] flex-shrink-0 snap-start overflow-hidden bg-[#f5f5f3] transition-opacity",
-                    {
-                      "opacity-100 border border-black": currentIndex === idx,
-                      "opacity-70": currentIndex !== idx
-                    }
-                  )}
-                >
-                  {!!img.url && (
-                    <Image
-                      src={img.url}
-                      className="absolute inset-0 object-cover object-top"
-                      alt={`Thumbnail ${idx + 1}`}
-                      fill
-                      sizes="80px"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )
 }
 
 export default ImageGallery
+

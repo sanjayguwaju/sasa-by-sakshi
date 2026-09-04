@@ -379,3 +379,77 @@ export const updateCustomerAddress = async (
       return { success: false, error: err.toString() }
     })
 }
+
+export type PasswordResetState =
+  | { state: "error"; error: string }
+  | { state: "success"; email?: string; message?: string }
+  | null
+
+export async function requestPasswordReset(
+  _currentState: unknown,
+  formData: FormData
+): Promise<PasswordResetState> {
+  const email = (formData.get("email") as string)?.trim()
+
+  if (!email) {
+    return { state: "error", error: "Please enter a valid email address." }
+  }
+
+  try {
+    await sdk.auth.resetPassword("customer", "emailpass", {
+      identifier: email,
+    })
+    return {
+      state: "success",
+      email,
+      message: "If an account exists with this email, we have sent instructions to reset your password.",
+    }
+  } catch (error: any) {
+    return {
+      state: "error",
+      error: error?.message || "Failed to send password reset request. Please try again.",
+    }
+  }
+}
+
+export async function resetCustomerPassword(
+  _currentState: unknown,
+  formData: FormData
+): Promise<PasswordResetState> {
+  const token = formData.get("token") as string
+  const password = formData.get("password") as string
+  const confirmPassword = formData.get("confirm_password") as string
+
+  if (!token) {
+    return { state: "error", error: "Invalid or expired reset token." }
+  }
+
+  if (!password || password.length < 6) {
+    return { state: "error", error: "Password must be at least 6 characters long." }
+  }
+
+  if (password !== confirmPassword) {
+    return { state: "error", error: "Passwords do not match." }
+  }
+
+  try {
+    await sdk.auth.updateProvider(
+      "customer",
+      "emailpass",
+      {
+        password,
+      },
+      token
+    )
+    return {
+      state: "success",
+      message: "Your password has been successfully updated. You can now sign in with your new password.",
+    }
+  } catch (error: any) {
+    return {
+      state: "error",
+      error: error?.message || "Failed to reset password. The link may have expired.",
+    }
+  }
+}
+

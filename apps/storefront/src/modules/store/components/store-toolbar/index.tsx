@@ -22,76 +22,37 @@ export default function StoreToolbar({ sortBy }: { sortBy: SortOptions }) {
   )
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between border-t border-b border-gray-200 py-3 mb-8">
-      {/* Left: View As */}
-      <div className="flex items-center gap-x-4 mb-4 md:mb-0">
-        <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-black">
-          View As
+    <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
+      {/* Left: Product summary label */}
+      <div className="flex items-center gap-x-2">
+        <span className="text-xs uppercase tracking-[0.15em] text-gray-500 font-medium">
+          Handcrafted Silhouettes
         </span>
-        <div className="flex items-center gap-x-1">
-          {/* 2 columns icon */}
-          <button className="p-0.5 text-gray-400 hover:text-black">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="4" y="4" width="7" height="16" />
-              <rect x="13" y="4" width="7" height="16" />
-            </svg>
-          </button>
-          {/* 3 columns icon (active) */}
-          <button className="p-0.5 text-black">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="3" y="4" width="5" height="16" />
-              <rect x="9.5" y="4" width="5" height="16" />
-              <rect x="16" y="4" width="5" height="16" />
-            </svg>
-          </button>
-          {/* 4 columns icon */}
-          <button className="p-0.5 text-gray-400 hover:text-black">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="2" y="4" width="4" height="16" />
-              <rect x="7.3" y="4" width="4" height="16" />
-              <rect x="12.6" y="4" width="4" height="16" />
-              <rect x="18" y="4" width="4" height="16" />
-            </svg>
-          </button>
-          {/* List view icon */}
-          <button className="p-0.5 text-gray-400 hover:text-black">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="3" y="5" width="18" height="3" />
-              <rect x="3" y="10.5" width="18" height="3" />
-              <rect x="3" y="16" width="18" height="3" />
-            </svg>
-          </button>
-        </div>
       </div>
 
-      {/* Right: Items Per Page & Sort By */}
-      <div className="flex items-center gap-x-8">
-        <div className="flex items-center gap-x-2">
-          <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-black">
-            Items Per Page
-          </span>
-          <select className="text-[11px] uppercase bg-transparent outline-none cursor-pointer">
-            <option value="16">16</option>
-            <option value="32">32</option>
-            <option value="48">48</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-x-2">
-          <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-black">
-            Sort By:
-          </span>
+      {/* Right: Sort By */}
+      <div className="flex items-center gap-x-3">
+        <span className="text-xs font-semibold tracking-[0.1em] uppercase text-black">
+          Sort:
+        </span>
+        <div className="relative">
           <select 
-            value={sortBy} 
+            value={sortBy || "created_at"} 
             onChange={(e) => setQueryParams("sortBy", e.target.value)}
-            className="text-[11px] uppercase bg-transparent outline-none cursor-pointer"
+            className="text-xs uppercase tracking-wider bg-[#fafafa] border border-gray-200 rounded-sm py-1.5 pl-3 pr-8 text-black outline-none cursor-pointer hover:border-black transition-colors appearance-none"
           >
             <option value="created_at">Latest Arrivals</option>
             <option value="price_asc">Price: Low to High</option>
             <option value="price_desc">Price: High to Low</option>
           </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+

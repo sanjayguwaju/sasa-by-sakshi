@@ -9,6 +9,7 @@ import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import NavSearch from "@modules/layout/components/nav-search"
 import NavAccount from "@modules/layout/components/nav-account"
+import AnnouncementTicker from "@modules/layout/components/announcement-ticker"
 
 export default async function Nav() {
   const [regions, locales, currentLocale] = await Promise.all([
@@ -19,22 +20,21 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      {/* Announcement Bar – desktop only */}
-      <div className="bg-black text-white text-center py-2 text-[10px] tracking-[0.2em] uppercase font-medium hidden small:block">
-        Cash on Delivery Available Across Nepal&nbsp;&nbsp;|&nbsp;&nbsp;Exclusive Festive Kurtha Collection
-      </div>
+      {/* Animated Announcement Ticker (Desktop & Mobile) */}
+      <AnnouncementTicker />
 
       <header className="relative bg-white border-b border-gray-100 shadow-sm">
         {/* ===== DESKTOP NAVBAR ===== */}
         <nav className="hidden small:flex items-center justify-between w-full h-16 content-container">
 
           {/* Left: Nav Links */}
-          <div className="flex items-center gap-x-7 h-full">
+          <div className="flex items-center gap-x-8 h-full">
             <NavLink href="/store" label="All Kurthas" />
-            <NavLink href="/collections" label="Collections" badge="HOT" badgeColor="#cda434" />
-            <NavLink href="/categories" label="New In" />
-            <NavLink href="/blog" label="Journal" badge="BLOG" badgeColor="#1a1a1a" />
+            <NavLink href="/collections" label="Collections" />
+            <NavLink href="/categories" label="Categories" />
+            <NavLink href="/blog" label="Journal" />
           </div>
+
 
           {/* Center: Brand Logo */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
@@ -107,14 +107,10 @@ export default async function Nav() {
 function NavLink({
   href,
   label,
-  badge,
-  badgeColor,
   labelColor,
 }: {
   href: string
   label: string
-  badge?: string
-  badgeColor?: string
   labelColor?: string
 }) {
   return (
@@ -123,20 +119,12 @@ function NavLink({
       className="relative group h-full flex items-center"
     >
       <span
-        className="text-[11px] tracking-[0.12em] uppercase font-medium transition-colors duration-200 hover:text-black"
-        style={{ color: labelColor ?? "#555" }}
+        className="text-[11px] tracking-[0.15em] uppercase font-semibold text-gray-700 group-hover:text-black transition-colors duration-200"
+        style={{ color: labelColor }}
       >
         {label}
-        {badge && (
-          <span
-            className="absolute -top-1 -right-5 text-white text-[7px] px-1 py-0.5 rounded-[2px] tracking-wider font-bold leading-none"
-            style={{ backgroundColor: badgeColor }}
-          >
-            {badge}
-          </span>
-        )}
       </span>
-      <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-full" />
+      <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full" />
     </LocalizedClientLink>
   )
 }

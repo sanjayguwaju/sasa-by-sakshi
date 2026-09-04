@@ -13,7 +13,15 @@ const modules: any = [
           options: {
             merchant_id: process.env.ESEWA_MERCHANT_ID || 'EPAYTEST',
             secret_key: process.env.ESEWA_SECRET_KEY || '8gBm/:&EnhH.1/q',
-            test_mode: true,
+            test_mode: process.env.ESEWA_TEST_MODE !== 'false',
+          },
+        },
+        {
+          resolve: './src/modules/khalti-payment',
+          id: 'khalti',
+          options: {
+            secret_key: process.env.KHALTI_SECRET_KEY || 'live_secret_key_68622e030cdd42129e92b3438a0f9b6b',
+            test_mode: process.env.KHALTI_TEST_MODE !== 'false',
           },
         },
       ],
@@ -60,28 +68,35 @@ if (process.env.RESEND_API_KEY) {
   })
 }
 
+const authProviders: any[] = [
+  {
+    resolve: '@medusajs/medusa/auth-emailpass',
+    id: 'emailpass',
+  },
+]
+
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  modules.push({
-    resolve: '@medusajs/medusa/auth',
+  authProviders.push({
+    resolve: '@medusajs/medusa/auth-google',
+    id: 'google',
     options: {
-      providers: [
-        {
-          resolve: '@medusajs/medusa/auth-emailpass',
-          id: 'emailpass',
-        },
-        {
-          resolve: '@medusajs/medusa/auth-google',
-          id: 'google',
-          options: {
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackUrl: process.env.GOOGLE_CALLBACK_URL || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://sasabysakshi.com'}/auth/google/callback`,
-          },
-        },
-      ],
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackUrl: process.env.GOOGLE_CALLBACK_URL || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://sasabysakshi.com'}/auth/google/callback`,
     },
   })
 }
+
+modules.push({
+  resolve: '@medusajs/medusa/auth',
+  options: {
+    providers: authProviders,
+  },
+})
+
+const defaultStoreCors = "http://localhost:8000,http://localhost:8001,http://localhost:5173,http://localhost:3000,https://sasabysakshi.com,https://www.sasabysakshi.com,http://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io,https://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io"
+const defaultAdminCors = "http://localhost:9000,http://localhost:5173,http://localhost:8000,http://localhost:3000,http://127.0.0.1:9000,http://127.0.0.1:5173,https://sasabysakshi.com,https://api.sasabysakshi.com,http://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io,https://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io"
+const defaultAuthCors = `${defaultAdminCors},${defaultStoreCors}`
 
 module.exports = defineConfig({
   projectConfig: {
@@ -90,10 +105,14 @@ module.exports = defineConfig({
     databaseDriverOptions: {
       connection: { ssl: false },
     },
+    cookieOptions: {
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: "lax",
+    },
     http: {
-      storeCors: process.env.STORE_CORS || "http://localhost:8000,http://localhost:5173,http://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io",
-      adminCors: process.env.ADMIN_CORS || "http://localhost:9000,http://localhost:5173,http://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io",
-      authCors: process.env.AUTH_CORS || "http://localhost:9000,http://localhost:8000,http://localhost:5173,http://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io,http://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io",
+      storeCors: process.env.STORE_CORS || defaultStoreCors,
+      adminCors: process.env.ADMIN_CORS || defaultAdminCors,
+      authCors: process.env.AUTH_CORS || defaultAuthCors,
       jwtSecret: process.env.JWT_SECRET || "supersecret_jwt_key_sasa_12345",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret_cookie_key_sasa_12345",
     },

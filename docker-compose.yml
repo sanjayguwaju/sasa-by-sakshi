@@ -7,10 +7,12 @@ services:
     restart: unless-stopped
     # Medusa v2 runs 25+ module migrations in parallel — raise max_connections
     command: postgres -c max_connections=500 -c shared_buffers=256MB
+    env_file:
+      - .env.docker
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-sasa_db}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

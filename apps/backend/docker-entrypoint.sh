@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-ADMIN_EMAIL="${MEDUSA_ADMIN_EMAIL:-admin@medusa.local}"
-ADMIN_PASSWORD="${MEDUSA_ADMIN_PASSWORD:-supersecret}"
+ADMIN_EMAIL="${MEDUSA_ADMIN_EMAIL:-admin@sasabysakshi.com}"
+ADMIN_PASSWORD="${MEDUSA_ADMIN_PASSWORD:-AdminPassword123!}"
 SHARED_KEY_FILE="/shared/publishable_key.env"
 
 cd /app/apps/backend
@@ -83,65 +83,64 @@ until curl -sf http://localhost:9000/health > /dev/null 2>&1; do
 done
 echo "  ✅  Backend is healthy!"
 
-# ─── Generate publishable API key ─────────────────────────────────────────────
-# Skip if we already generated one (handles container restarts gracefully)
-if [ -f "$SHARED_KEY_FILE" ] && grep -q "pk_" "$SHARED_KEY_FILE"; then
-  echo ""
-  echo "  🔑  Publishable key already exists — skipping generation."
+# ─── Ensure active publishable API key ────────────────────────────────────────
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  🔑  Resolving publishable API key..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Authenticate as admin
+LOGIN_RESPONSE=$(curl -s -X POST http://localhost:9000/auth/user/emailpass \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}")
+
+TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token // empty')
+
+if [ -z "$TOKEN" ]; then
+  echo "  ⚠️   Could not authenticate with admin credentials."
+  echo "       Response: $LOGIN_RESPONSE"
 else
-  echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  🔑  Generating publishable API key..."
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  ✅  Authenticated as admin."
 
-  # Authenticate as admin
-  LOGIN_RESPONSE=$(curl -s -X POST http://localhost:9000/auth/user/emailpass \
-    -H "Content-Type: application/json" \
-    -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}")
+  # Check for existing publishable API keys first
+  KEYS_RESPONSE=$(curl -s -H "Authorization: Bearer ${TOKEN}" "http://localhost:9000/admin/api-keys?type=publishable")
+  PUB_KEY=$(echo "$KEYS_RESPONSE" | jq -r '.api_keys[0].token // empty')
+  KEY_ID=$(echo "$KEYS_RESPONSE" | jq -r '.api_keys[0].id // empty')
 
-  TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token // empty')
-
-  if [ -z "$TOKEN" ]; then
-    echo "  ⚠️   Could not authenticate with admin credentials."
-    echo "       Response: $LOGIN_RESPONSE"
-  else
-    echo "  ✅  Authenticated as admin."
-
-    # Create a publishable API key
+  # If none found, create a new one
+  if [ -z "$PUB_KEY" ]; then
     KEY_RESPONSE=$(curl -s -X POST http://localhost:9000/admin/api-keys \
       -H "Authorization: Bearer ${TOKEN}" \
       -H "Content-Type: application/json" \
       -d '{"title":"Docker Storefront Key","type":"publishable"}')
-
     PUB_KEY=$(echo "$KEY_RESPONSE" | jq -r '.api_key.token // empty')
+    KEY_ID=$(echo "$KEY_RESPONSE" | jq -r '.api_key.id // empty')
+  fi
 
-    if [ -n "$PUB_KEY" ]; then
-      echo "  ✅  Publishable key: ${PUB_KEY}"
+  if [ -n "$PUB_KEY" ]; then
+    echo "  ✅  Publishable key: ${PUB_KEY}"
 
-      # Link the key to the default sales channel (if it exists)
-      SC_RESPONSE=$(curl -s \
+    # Link the key to the default sales channel (if it exists)
+    SC_RESPONSE=$(curl -s \
+      -H "Authorization: Bearer ${TOKEN}" \
+      http://localhost:9000/admin/sales-channels)
+
+    SC_ID=$(echo "$SC_RESPONSE" | jq -r '.sales_channels[0].id // empty')
+
+    if [ -n "$SC_ID" ] && [ -n "$KEY_ID" ]; then
+      curl -s -X POST "http://localhost:9000/admin/api-keys/${KEY_ID}/sales-channels" \
         -H "Authorization: Bearer ${TOKEN}" \
-        http://localhost:9000/admin/sales-channels)
-
-      SC_ID=$(echo "$SC_RESPONSE" | jq -r '.sales_channels[0].id // empty')
-      KEY_ID=$(echo "$KEY_RESPONSE" | jq -r '.api_key.id // empty')
-
-      if [ -n "$SC_ID" ] && [ -n "$KEY_ID" ]; then
-        curl -s -X POST "http://localhost:9000/admin/api-keys/${KEY_ID}/sales-channels" \
-          -H "Authorization: Bearer ${TOKEN}" \
-          -H "Content-Type: application/json" \
-          -d "{\"add\":[\"${SC_ID}\"]}" > /dev/null
-        echo "  🔗  Linked key to sales channel: ${SC_ID}"
-      fi
-
-      # Write key to shared volume for the storefront
-      mkdir -p /shared
-      printf "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\n" "${PUB_KEY}" > "$SHARED_KEY_FILE"
-      echo "  📝  Key saved to ${SHARED_KEY_FILE}"
-    else
-      echo "  ⚠️   Could not generate publishable key."
-      echo "       Response: $KEY_RESPONSE"
+        -H "Content-Type: application/json" \
+        -d "{\"add\":[\"${SC_ID}\"]}" > /dev/null
+      echo "  🔗  Linked key to sales channel: ${SC_ID}"
     fi
+
+    # Write key to shared volume for the storefront
+    mkdir -p /shared
+    printf "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=%s\n" "${PUB_KEY}" > "$SHARED_KEY_FILE"
+    echo "  📝  Key saved to ${SHARED_KEY_FILE}"
+  else
+    echo "  ⚠️   Could not resolve or generate publishable key."
   fi
 fi
 
