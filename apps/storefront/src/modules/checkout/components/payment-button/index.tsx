@@ -37,7 +37,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       )
     case isManual(paymentSession?.provider_id):
       return (
-        <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+        <ManualTestPaymentButton cart={cart} notReady={notReady} data-testid={dataTestId} />
       )
     case isEsewa(paymentSession?.provider_id):
       return (
@@ -167,9 +167,20 @@ const StripePaymentButton = ({
   )
 }
 
-const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+const ManualTestPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart?: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const selectedShippingMethod = cart?.shipping_methods?.at(-1)
+  const isOutsideValley = selectedShippingMethod?.name?.toLowerCase().includes("outside")
 
   const onPaymentCompleted = async () => {
     await placeOrder()
@@ -189,14 +200,29 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
 
   return (
     <>
+      {isOutsideValley ? (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-950">
+          <p className="font-semibold flex items-center gap-1.5 mb-1">
+            <span>📞</span> Outside Valley Verification
+          </p>
+          <p className="text-neutral-600 leading-relaxed">
+            Our team will contact you via call or WhatsApp to confirm your sizing and address before handing the package to our courier partner.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 text-xs text-neutral-600 flex items-center gap-2">
+          <span>💵</span>
+          <span>Cash on Delivery: Pay when your order arrives at your doorstep.</span>
+        </div>
+      )}
       <Button
         disabled={notReady}
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
-        data-testid="submit-order-button"
+        data-testid={dataTestId || "submit-order-button"}
       >
-        Place order
+        Place order (Cash on Delivery)
       </Button>
       <ErrorMessage
         error={errorMessage}

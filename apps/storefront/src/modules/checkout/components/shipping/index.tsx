@@ -366,6 +366,42 @@ const Shipping: React.FC<ShippingProps> = ({
             </div>
           )}
 
+          {shippingMethodId && (() => {
+            const selectedMethod =
+              availableShippingMethods?.find((sm) => sm.id === shippingMethodId) ||
+              cart.shipping_methods?.find((sm) => sm.shipping_option_id === shippingMethodId)
+            const isOutsideValley = selectedMethod?.name?.toLowerCase().includes("outside")
+
+            return (
+              <div
+                className={clx(
+                  "mb-6 p-4 rounded-xl border text-xs transition-all",
+                  isOutsideValley
+                    ? "bg-amber-50/70 border-amber-200/80 text-amber-950"
+                    : "bg-emerald-50/70 border-emerald-200/80 text-emerald-950"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">
+                    {isOutsideValley ? "📦" : "🚚"}
+                  </span>
+                  <div className="space-y-1">
+                    <p className="font-semibold uppercase tracking-wider text-[11px]">
+                      {isOutsideValley
+                        ? "Outside Valley Courier Notice"
+                        : "Kathmandu Valley Fast Dispatch"}
+                    </p>
+                    <p className="leading-relaxed text-ui-fg-subtle">
+                      {isOutsideValley
+                        ? "To ensure smooth handover and avoid return-to-origin courier charges, our team will call or WhatsApp you to confirm sizing and address prior to parcel dispatch."
+                        : "Standard doorstep delivery within 24–48 hours across Kathmandu, Lalitpur, and Bhaktapur with live call/SMS updates."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           <div>
             <ErrorMessage
               error={error}
