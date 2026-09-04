@@ -78,11 +78,15 @@ export default async function initial_data_seed({
     input: {
       stores: [
         {
-          name: "Default Store",
+          name: "Sasa by Sakshi",
           supported_currencies: [
             {
-              currency_code: "eur",
+              currency_code: "npr",
               is_default: true,
+            },
+            {
+              currency_code: "eur",
+              is_default: false,
             },
             {
               currency_code: "usd",
@@ -123,8 +127,9 @@ export default async function initial_data_seed({
   logger.info("Finished seeding regions.");
 
   logger.info("Seeding tax regions...");
+  const taxCountries = [...countries, "np"];
   await createTaxRegionsWorkflow(container).run({
-    input: countries.map((country_code) => ({
+    input: taxCountries.map((country_code) => ({
       country_code,
       provider_id: "tp_system",
     })),
@@ -168,9 +173,18 @@ export default async function initial_data_seed({
   const shippingProfile = shippingProfileResult[0];
 
   const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: "European Warehouse delivery",
+    name: "Kathmandu Central Warehouse delivery",
     type: "shipping",
     service_zones: [
+      {
+        name: "Nepal",
+        geo_zones: [
+          {
+            country_code: "np",
+            type: "country",
+          },
+        ],
+      },
       {
         name: "Europe",
         geo_zones: [
@@ -207,6 +221,14 @@ export default async function initial_data_seed({
     ],
   });
 
+  const nepalServiceZone =
+    fulfillmentSet.service_zones.find((sz) => sz.name === "Nepal") ||
+    fulfillmentSet.service_zones[0];
+  const europeServiceZone =
+    fulfillmentSet.service_zones.find((sz) => sz.name === "Europe") ||
+    fulfillmentSet.service_zones[1] ||
+    fulfillmentSet.service_zones[0];
+
   await link.create({
     [Modules.STOCK_LOCATION]: {
       stock_location_id: stockLocation.id,
@@ -222,7 +244,7 @@ export default async function initial_data_seed({
         name: "Standard Shipping",
         price_type: "flat",
         provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
+        service_zone_id: europeServiceZone.id,
         shipping_profile_id: shippingProfile.id,
         type: {
           label: "Standard",
@@ -260,7 +282,7 @@ export default async function initial_data_seed({
         name: "Express Shipping",
         price_type: "flat",
         provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
+        service_zone_id: europeServiceZone.id,
         shipping_profile_id: shippingProfile.id,
         type: {
           label: "Express",
@@ -298,31 +320,40 @@ export default async function initial_data_seed({
         name: "Inside Ring Road (Kathmandu)",
         price_type: "flat",
         provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
+        service_zone_id: nepalServiceZone.id,
         shipping_profile_id: shippingProfile.id,
         type: { label: "Standard", description: "Inside Ring Road", code: "inside-ring" },
         prices: [{ region_id: nepalRegion.id, amount: 100 }],
-        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+        rules: [
+          { attribute: "enabled_in_store", value: "true", operator: "eq" },
+          { attribute: "is_return", value: "false", operator: "eq" }
+        ],
       },
       {
         name: "Outside Ring Road / Kathmandu Valley",
         price_type: "flat",
         provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
+        service_zone_id: nepalServiceZone.id,
         shipping_profile_id: shippingProfile.id,
         type: { label: "Standard", description: "Outside Ring Road", code: "outside-ring" },
         prices: [{ region_id: nepalRegion.id, amount: 150 }],
-        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+        rules: [
+          { attribute: "enabled_in_store", value: "true", operator: "eq" },
+          { attribute: "is_return", value: "false", operator: "eq" }
+        ],
       },
       {
         name: "Outside Valley",
         price_type: "flat",
         provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
+        service_zone_id: nepalServiceZone.id,
         shipping_profile_id: shippingProfile.id,
         type: { label: "Standard", description: "Outside Valley", code: "outside-valley" },
         prices: [{ region_id: nepalRegion.id, amount: 250 }],
-        rules: [{ attribute: "is_return", value: "false", operator: "eq" }]
+        rules: [
+          { attribute: "enabled_in_store", value: "true", operator: "eq" },
+          { attribute: "is_return", value: "false", operator: "eq" }
+        ],
       }
     ],
   });
