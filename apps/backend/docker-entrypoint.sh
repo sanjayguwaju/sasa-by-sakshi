@@ -5,6 +5,8 @@ ADMIN_EMAIL="${MEDUSA_ADMIN_EMAIL:-admin@sasabysakshi.com}"
 ADMIN_PASSWORD="${MEDUSA_ADMIN_PASSWORD:-AdminPassword123!}"
 SHARED_KEY_FILE="/shared/publishable_key.env"
 
+export __MEDUSA_ADMIN_ADDITIONAL_ALLOWED_HOSTS="${__MEDUSA_ADMIN_ADDITIONAL_ALLOWED_HOSTS:-sasaapi.sanjayguwaju.com.np,sasa.sanjayguwaju.com.np,.sanjayguwaju.com.np,localhost,127.0.0.1}"
+
 cd /app/apps/backend
 
 # ─── Check Database Connection ────────────────────────────────────────────────

@@ -94,11 +94,25 @@ modules.push({
   },
 })
 
-const defaultStoreCors = "http://localhost:8000,http://localhost:8001,http://localhost:5173,http://localhost:3000,https://sasabysakshi.com,https://www.sasabysakshi.com,http://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io,https://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io"
-const defaultAdminCors = "http://localhost:9000,http://localhost:5173,http://localhost:8000,http://localhost:3000,http://127.0.0.1:9000,http://127.0.0.1:5173,https://sasabysakshi.com,https://api.sasabysakshi.com,http://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io,https://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io"
+const defaultStoreCors = "http://localhost:8000,http://localhost:8001,http://localhost:5173,http://localhost:3000,https://sasabysakshi.com,https://www.sasabysakshi.com,https://sasa.sanjayguwaju.com.np,http://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io,https://vqppdqpuaq9szvbwx6ahiapw.200.141.14.52.sslip.io"
+const defaultAdminCors = "http://localhost:9000,http://localhost:5173,http://localhost:8000,http://localhost:3000,http://127.0.0.1:9000,http://127.0.0.1:5173,https://sasabysakshi.com,https://api.sasabysakshi.com,https://sasaapi.sanjayguwaju.com.np,http://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io,https://m3l4rslizswez4jgdlzyx4dz.200.141.14.52.sslip.io"
 const defaultAuthCors = `${defaultAdminCors},${defaultStoreCors}`
 
 module.exports = defineConfig({
+  admin: {
+    backendUrl: process.env.MEDUSA_BACKEND_URL || "https://sasaapi.sanjayguwaju.com.np",
+    vite: () => ({
+      server: {
+        allowedHosts: [
+          "sasaapi.sanjayguwaju.com.np",
+          "sasa.sanjayguwaju.com.np",
+          ".sanjayguwaju.com.np",
+          "localhost",
+          "127.0.0.1",
+        ],
+      },
+    }),
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
