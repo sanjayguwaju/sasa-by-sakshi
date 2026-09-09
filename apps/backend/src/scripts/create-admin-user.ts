@@ -47,15 +47,18 @@ export default async function createAdminUser({ container }: ExecArgs) {
       try {
         const authProviderService = (authModule as any).getAuthIdentityProviderService("emailpass")
         const passwordHash = await authProviderService.hashPassword(password)
-        await authModule.updateProviderIdentities({
-          provider: "emailpass",
-          entity_id: email,
-          provider_metadata: {
-            password: passwordHash,
-          },
-        })
-        console.log(`  ✅ Password synchronized successfully for ${email}`)
         authIdentity = await authProviderService.retrieve({ entity_id: email })
+        const providerIdentity = authIdentity?.provider_identities?.find((pi: any) => pi.provider === "emailpass")
+        if (providerIdentity?.id) {
+          await (authModule as any).updateProviderIdentities({
+            id: providerIdentity.id,
+            provider_metadata: {
+              ...(providerIdentity.provider_metadata || {}),
+              password: passwordHash,
+            },
+          })
+          console.log(`  ✅ Password synchronized successfully for ${email}`)
+        }
       } catch (err: any) {
         console.warn(`  ⚠️ Could not update password hash via provider service:`, err.message || err)
       }
