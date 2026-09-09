@@ -44,23 +44,20 @@ export default async function createAdminUser({ container }: ExecArgs) {
     } else {
       // Auth identity already existed -> update password
       console.log(`  ℹ️ Auth identity exists, updating password hash...`)
-      const updateRes = await authModule.updateProvider("emailpass", {
-        entity_id: email,
-        password,
-      })
-
-      if (updateRes.error) {
-        console.warn(`  ⚠️ updateProvider notice: ${updateRes.error}`)
-      } else {
-        console.log(`  ✅ Password synchronized successfully for ${email}`)
-      }
-
-      // Retrieve identity to link app_metadata
       try {
         const authProviderService = (authModule as any).getAuthIdentityProviderService("emailpass")
+        const passwordHash = await authProviderService.hashPassword(password)
+        await authModule.updateProviderIdentities({
+          provider: "emailpass",
+          entity_id: email,
+          provider_metadata: {
+            password: passwordHash,
+          },
+        })
+        console.log(`  ✅ Password synchronized successfully for ${email}`)
         authIdentity = await authProviderService.retrieve({ entity_id: email })
       } catch (err: any) {
-        console.warn(`  ⚠️ Could not retrieve auth identity via provider service:`, err.message || err)
+        console.warn(`  ⚠️ Could not update password hash via provider service:`, err.message || err)
       }
     }
 

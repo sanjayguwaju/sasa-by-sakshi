@@ -68,6 +68,8 @@ cp -r /app/apps/backend/.medusa/server/public/* /app/apps/backend/public/ 2>/dev
 mkdir -p /app/apps/backend/.medusa/server/public
 cp -r /app/apps/backend/public/* /app/apps/backend/.medusa/server/public/ 2>/dev/null || true
 
+export NODE_ENV="production"
+
 pnpm medusa start &
 MEDUSA_PID=$!
 

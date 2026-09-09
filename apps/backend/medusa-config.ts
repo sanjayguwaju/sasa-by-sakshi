@@ -100,7 +100,7 @@ const defaultAuthCors = `${defaultAdminCors},${defaultStoreCors}`
 
 module.exports = defineConfig({
   admin: {
-    backendUrl: process.env.MEDUSA_BACKEND_URL || "https://sasaapi.sanjayguwaju.com.np",
+    backendUrl: process.env.MEDUSA_BACKEND_URL || "/",
     vite: () => ({
       server: {
         allowedHosts: [
