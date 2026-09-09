@@ -11,27 +11,25 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Always run pnpm commands from workspace root so hoisted binaries are resolvable
 cd /app
 
+export HOSTNAME="0.0.0.0"
+export PORT="8000"
+export NODE_ENV="production"
+export MEDUSA_SERVER_URL="${MEDUSA_SERVER_URL:-http://backend:9000}"
+export NEXT_PUBLIC_MEDUSA_BACKEND_URL="${NEXT_PUBLIC_MEDUSA_BACKEND_URL:-https://sasaapi.sanjayguwaju.com.np}"
+export NEXT_PUBLIC_BASE_URL="${NEXT_PUBLIC_BASE_URL:-https://sasa.sanjayguwaju.com.np}"
+export NEXT_PUBLIC_DEFAULT_REGION="${NEXT_PUBLIC_DEFAULT_REGION:-np}"
+
 # ─── Resolve publishable key ──────────────────────────────────────────────────
 if [ -n "$NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY" ]; then
-  echo "  🔑  Using pre-configured publishable key."
-else
-  echo "  ⏳  Waiting for publishable key from backend..."
-  RETRIES=0
-  MAX_RETRIES=60  # wait up to 5 minutes (60 × 5s)
-
-  until [ -f "$SHARED_KEY_FILE" ] && grep -q "pk_" "$SHARED_KEY_FILE"; do
-    RETRIES=$((RETRIES + 1))
-    if [ "$RETRIES" -ge "$MAX_RETRIES" ]; then
-      echo "  ❌  Timed out waiting for publishable key. Is the backend running?"
-      exit 1
-    fi
-    sleep 5
-  done
-
-  # Source the key into the environment
+  echo "  🔑  Using pre-configured publishable key: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}"
+elif [ -f "$SHARED_KEY_FILE" ] && grep -q "pk_" "$SHARED_KEY_FILE"; then
   . "$SHARED_KEY_FILE"
   export NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-  echo "  ✅  Publishable key loaded: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}"
+  echo "  ✅  Publishable key loaded from shared volume: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}"
+else
+  # Fallback to known provisioned key
+  export NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY="pk_4793917b891e38bd6da3c748ecc6884de919e11eedbed763bb54ed9652e7ea2c"
+  echo "  ✅  Publishable key fallback used: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}"
 fi
 
 # ─── Build Next.js ────────────────────────────────────────────────────────────
@@ -45,7 +43,7 @@ pnpm --filter=@dtc/storefront build
 # ─── Start storefront ─────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  🟢  Storefront running at http://localhost:8000"
+echo "  🟢  Storefront running at http://0.0.0.0:8000"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 

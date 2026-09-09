@@ -17,6 +17,8 @@ RUN pnpm install --prod=false --frozen-lockfile --filter=@dtc/storefront...
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
+ENV PORT="8000"
 
 # Bring in installed node_modules (root + per-package .bin symlinks)
 COPY --from=deps /app/node_modules ./node_modules

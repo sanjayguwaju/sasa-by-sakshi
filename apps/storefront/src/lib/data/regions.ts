@@ -15,7 +15,11 @@ export const listRegions = async () => {
       next,
       cache: "force-cache",
     })
-    .then(({ regions }) => regions)
+    .then(({ regions }) => regions || [])
+    .catch((err) => {
+      console.warn("listRegions fetch error:", err?.message || err)
+      return [] as HttpTypes.StoreRegion[]
+    })
 }
 
 export const retrieveRegion = async (id: string) => {
@@ -30,30 +34,31 @@ export const retrieveRegion = async (id: string) => {
       cache: "force-cache",
     })
     .then(({ region }) => region)
+    .catch(() => null)
 }
 
 const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
 export const getRegion = async (countryCode: string) => {
-  if (regionMap.has(countryCode)) {
-    return regionMap.get(countryCode)
+  const code = (countryCode || "").toLowerCase()
+  if (code && regionMap.has(code)) {
+    return regionMap.get(code)
   }
 
   const regions = await listRegions()
 
-  if (!regions) {
+  if (!regions || !regions.length) {
     return null
   }
 
   regions.forEach((region) => {
     region.countries?.forEach((c) => {
-      regionMap.set(c?.iso_2 ?? "", region)
+      if (c?.iso_2) {
+        regionMap.set(c.iso_2.toLowerCase(), region)
+      }
     })
   })
 
-  const region = countryCode
-    ? regionMap.get(countryCode)
-    : regionMap.get("us")
-
-  return region
+  const region = code ? regionMap.get(code) : undefined
+  return region || regionMap.get("np") || regions[0] || null
 }

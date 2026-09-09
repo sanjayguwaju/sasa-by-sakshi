@@ -17,36 +17,50 @@ export default async function Home(props: {
   params: Promise<{ countryCode: string }>
 }) {
   const params = await props.params
-
   const { countryCode } = params
 
-  const region = await getRegion(countryCode)
+  let region: any = null
+  try {
+    region = await getRegion(countryCode)
+  } catch (err) {
+    console.warn("Home page: getRegion error", err)
+  }
 
-  const [{ collections }, { response: { products } }] = await Promise.all([
-    listCollections({
-      fields: "id, handle, title",
-    }),
-    listProducts({
-      countryCode,
-      queryParams: {
-        limit: 8,
-      },
-    }),
-  ])
+  let collections: any[] = []
+  let products: any[] = []
 
-  if (!collections || !region) {
-    return null
+  try {
+    const [collectionsRes, productsRes] = await Promise.all([
+      listCollections({
+        fields: "id, handle, title",
+      }).catch(() => ({ collections: [], count: 0 })),
+      listProducts({
+        countryCode,
+        queryParams: {
+          limit: 8,
+        },
+      }).catch(() => ({ response: { products: [], count: 0 } })),
+    ])
+
+    collections = collectionsRes?.collections || []
+    products = productsRes?.response?.products || []
+  } catch (err) {
+    console.warn("Home page: data fetch error", err)
   }
 
   return (
     <>
       <Hero />
-      <BestSeller products={products} region={region} />
-      <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
-        </ul>
-      </div>
+      {region && products.length > 0 && (
+        <BestSeller products={products} region={region} />
+      )}
+      {region && collections.length > 0 && (
+        <div className="py-12">
+          <ul className="flex flex-col gap-x-6">
+            <FeaturedProducts collections={collections} region={region} />
+          </ul>
+        </div>
+      )}
     </>
   )
 }

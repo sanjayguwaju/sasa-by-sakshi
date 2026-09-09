@@ -43,24 +43,20 @@ export default async function createAdminUser({ container }: ExecArgs) {
       console.log(`  ✅ Registered new auth identity: ${authIdentity.id}`)
     } else {
       // Auth identity already existed -> update password
-      console.log(`  ℹ️ Auth identity exists, updating password hash...`)
+      console.log(`  ℹ️ Auth identity exists, updating password...`)
       try {
-        const authProviderService = (authModule as any).getAuthIdentityProviderService("emailpass")
-        const passwordHash = await authProviderService.hashPassword(password)
-        authIdentity = await authProviderService.retrieve({ entity_id: email })
-        const providerIdentity = authIdentity?.provider_identities?.find((pi: any) => pi.provider === "emailpass")
-        if (providerIdentity?.id) {
-          await (authModule as any).updateProviderIdentities({
-            id: providerIdentity.id,
-            provider_metadata: {
-              ...(providerIdentity.provider_metadata || {}),
-              password: passwordHash,
-            },
-          })
+        const updateRes = await (authModule as any).updateProvider("emailpass", {
+          entity_id: email,
+          password,
+        })
+        if (updateRes?.success && updateRes?.authIdentity) {
+          authIdentity = updateRes.authIdentity
           console.log(`  ✅ Password synchronized successfully for ${email}`)
+        } else {
+          authIdentity = await (authModule as any).retrieveAuthIdentityByProvider(email, "emailpass").catch(() => null)
         }
       } catch (err: any) {
-        console.warn(`  ⚠️ Could not update password hash via provider service:`, err.message || err)
+        console.warn(`  ⚠️ Could not update password via updateProvider:`, err.message || err)
       }
     }
 
