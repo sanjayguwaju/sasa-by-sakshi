@@ -79,11 +79,15 @@ export default function ProductActions({
     router.replace(pathname + "?" + params.toString())
   }, [selectedVariant, isValidVariant])
 
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
   const inStock = useMemo(() => {
-    if (selectedVariant && !selectedVariant.manage_inventory) return true
-    if (selectedVariant?.allow_backorder) return true
-    if (selectedVariant?.manage_inventory && (selectedVariant?.inventory_quantity || 0) > 0) return true
-    return false
+    if (!selectedVariant) return false
+    if (!selectedVariant.manage_inventory) return true
+    if (selectedVariant.allow_backorder) return true
+    if (selectedVariant.inventory_quantity === null || selectedVariant.inventory_quantity === undefined) return true
+    return selectedVariant.inventory_quantity > 0
   }, [selectedVariant])
 
   const actionsRef = useRef<HTMLDivElement>(null)
@@ -92,12 +96,21 @@ export default function ProductActions({
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
     setIsAdding(true)
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: qty,
-      countryCode,
-    })
-    setIsAdding(false)
+    setErrorMessage(null)
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity: qty,
+        countryCode,
+      })
+      setIsSuccess(true)
+      setTimeout(() => setIsSuccess(false), 3000)
+    } catch (err: any) {
+      console.error("Add to cart error:", err)
+      setErrorMessage(err?.message || "Failed to add item to bag. Please try again.")
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   // Calculate Mock Subtotal
@@ -163,15 +176,32 @@ export default function ProductActions({
         </div>
 
         {/* Add to Cart row */}
-        <div className="flex flex-col gap-y-3">
+        <div className="flex flex-col gap-y-2">
           <button
             onClick={handleAddToCart}
             disabled={!inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant}
-            className={`w-full h-12 bg-black text-white font-bold tracking-widest text-xs uppercase hover:bg-gray-800 transition-colors ${(!inStock || !isValidVariant) ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`w-full h-12 flex items-center justify-center gap-2 font-bold tracking-widest text-xs uppercase transition-all duration-200 ${
+              isSuccess
+                ? "bg-emerald-700 text-white"
+                : "bg-black text-white hover:bg-gray-800"
+            } ${(!inStock || !isValidVariant) ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="add-product-button"
           >
-            {!selectedVariant && !options ? "Select variant" : !inStock || !isValidVariant ? "Out of stock" : "Add to cart"}
+            {isAdding ? (
+              <span>Adding to Cart...</span>
+            ) : isSuccess ? (
+              <span>✓ Added to Cart</span>
+            ) : !selectedVariant && !options ? (
+              "Select variant"
+            ) : !inStock || !isValidVariant ? (
+              "Out of stock"
+            ) : (
+              "Add to cart"
+            )}
           </button>
+          {errorMessage && (
+            <p className="text-red-600 text-xs font-medium text-center">{errorMessage}</p>
+          )}
 
           {/* WhatsApp Direct Order / Inquiry Button */}
           {whatsappInquiryUrl && (
